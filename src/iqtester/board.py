@@ -68,6 +68,8 @@ class Board:
             for j in range(i + 1):
                 if self.board[i][j] == peg:
                     self.board[i][j] = None
+                    return True
+        return False
 
     def get_moves(self):
         """Return a list of the possible moves on the board"""

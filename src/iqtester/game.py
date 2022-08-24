@@ -22,10 +22,15 @@ class Game:
 
     def remove_one_peg(self):
         peg = ""
-        peg = self.f.prompt(
-            "The game starts with one empty hole. Pick a peg to remove"
-        )
-        self.b.remove(peg)
+        while True:
+            peg = self.f.prompt(
+                "The game starts with one empty hole. Pick a peg to remove"
+            )
+            if self.b.remove(peg):
+                break
+            else:
+                msg = "* You must choose a peg from the board. Try again *"
+                print(msg.center(self.f.w))
 
     def pick_peg(self, moves):
         while True:

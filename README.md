@@ -16,15 +16,15 @@ Python 3.0+
 
 ## Mac / Linux
 ```
-python3 -m pip install iq-tester
+python3 -m pip install iqtester
 ```
 
 ## Windows
 ```
-py -m pip install iq-tester
+py -m pip install iqtester
 ```
 
 ## Start Playing
 ```
-python3 -m iq-tester
+python3 -m iqtester
 ```
