@@ -21,7 +21,7 @@ JUMPS = {
     'a': [('6', '3'), ('9', '8')],
     'b': [('7', '4'), ('c', 'd')],
     'c': [('8', '5'), ('d', 'e')],
-    'd': [('8', '4'), ('9', '6'), ('c', 'b'), ('d', 'f')],
+    'd': [('8', '4'), ('9', '6'), ('c', 'b'), ('e', 'f')],
     'e': [('9', '5'), ('d', 'c')],
     'f': [('a', '6'), ('e', 'd')],
 }
@@ -37,30 +37,42 @@ MOVES = [
     ]
 
 # use to format command line output
-class format:
-   PURPLE = '\033[95m'
-   CYAN = '\033[96m'
-   DARKCYAN = '\033[36m'
-   BLUE = '\033[94m'
-   GREEN = '\033[92m'
-   YELLOW = '\033[93m'
-   RED = '\033[91m'
-   BOLD = '\033[1m'
-   UNDERLINE = '\033[4m'
-   END = '\033[0m'
+class Format:
+    formats = {
+        'PURPLE': '\033[95m',
+        'CYAN': '\033[96m',
+        'DARKCYAN': '\033[36m',
+        'BLUE': '\033[94m',
+        'GREEN': '\033[92m',
+        'YELLOW': '\033[93m',
+        'RED': '\033[91m',
+        'BOLD': '\033[1m',
+        'UNDERLINE': '\033[4m',
+        'END': '\033[0m',
+    }
 
+    def apply(self, text, options=['BOLD']):
+        for format in options:
+            text = self.formats[format] + text
+        return text + self.formats['END']
+
+f = Format()
+
+PROMPT = f.apply('>>', ['BOLD'])
 
 def show_board(board, up='0', jumps=[]):
     print()
-    print(' IQ TESTER '.center(WIDTH, '-'))
+    print(' IQ TESTER BOARD '.center(WIDTH, '-'))
     blank_row = '|' + ''.center(WIDTH - 2) + '|'
     print(blank_row)
+    print('|' + '/ \\'.center(WIDTH - 2) + '|')
     # outer loop iterates once for each row of the board
     for row in range(5):
         # index of first hole in row is the (row)th triangular number
         row_start_idx = int(row * (row + 1) / 2)
-        row_display = ''
+        row_display = '/ '
         width_inc = 0
+        formatted_pegs = 0
         # inner loop iterates once for each hole in the current row
         for hole in range(row + 1):
             # set current hole's index, hex value, and peg (boolean)
@@ -68,53 +80,47 @@ def show_board(board, up='0', jumps=[]):
             hex_val = hex(hole_idx + 1)[-1]
             peg = board[hole_idx] == hex_val
 
-            # Evaluate if hole is part of a jump
-            #  - landing place: green (with number)
-            #  - jumped peg: red (with hex_val)
-            landing = jumped = False
-            for i, jump in enumerate(jumps):
-                if hex_val == jump[1]:
-                    landing = True
-                    break
-                elif hex_val == jump[0]:
+            # Check if peg is an option to be jumped
+            jumped = False
+            for jump in jumps:
+                if hex_val == jump[0]:
                     jumped = True
                     break
 
             # if peg in hole and it is lifted
             if peg and hex_val == up:
-                row_display += format.BLUE + format.BOLD + hex_val + format.END + ' '
+                row_display += f.apply(hex_val, ['BOLD', 'BLUE']) + ' '
                 width_inc += 13
+                formatted_pegs += 1
             # if peg in hole and it could be jumped
             elif peg and jumped:
-                row_display += format.RED + format.BOLD + hex_val + format.END + ' '
+                row_display += f.apply(hex_val, ['BOLD', 'RED']) + ' '
                 width_inc += 13
-            # if no peg in hole and it could be a landing spot for lifted peg
-            elif not peg and landing:
-                row_display += format.GREEN + format.BOLD + str(i) + format.END + ' '
-                width_inc += 13
-            # if no peg (and not a landing spot)
-            elif not peg and not landing:
-                row_display += '  '
+                formatted_pegs += 1
             # if peg and cannot be jumped
             elif peg:
                 row_display += hex_val + ' '
+            # if no peg
+            else:
+                row_display += '  '
 
         # display row
-        if width_inc > 0:
+        row_display += '\\'
+        if formatted_pegs % 2 == 1:
             row_display = ' ' + row_display
         print('|' + row_display.center(WIDTH - 2 + width_inc) + '|')
 
     # finish border
+    print('|' + '-------------'.center(WIDTH - 2) + '|')
     print(blank_row)
     print(''.center(WIDTH, '-'), '\n')
 
 
 def remove_one_peg(board):
-    print(' BEGIN GAME '.center(WIDTH, '*'), '\n')
     print('The game starts with one empty hole.\n')
     peg = ''
     while peg != ' ' and peg not in board:
-        peg = input('>> Which peg would you like to remove? ')
+        peg = input(f'Which peg would you like to remove? {PROMPT} ')
     board[int(peg, 16) - 1] = ' '
 
 
@@ -134,7 +140,7 @@ def is_game_over(board):
 def choose_peg_to_move(board):
     valid_jumps = []
     while True:
-        peg = input(' >> What peg would like to move? ')
+        peg = input(f'What peg would like to move? {PROMPT} ')
         potential_jumps = JUMPS[peg]
         for jump in potential_jumps:
             # 'over' must have a peg and 'to' must be empty
@@ -148,18 +154,12 @@ def choose_peg_to_move(board):
 
 
 def pick_jump(jumps):
-    hole = '0'
-    green = format.GREEN + format.BOLD + 'green' + format.END
-    blue = format.BLUE + format.BOLD + 'blue' + format.END
+    red = f.apply('red', ['BOLD', 'RED'])
     while True:
-        hole = input(f' >> Enter {green} number to place {blue} peg: ')
-        try:
-            int(hole)
-        except ValueError:
-            continue
-        if 0 <= hole < len(jumps):
-            break
-    return jumps[hole]
+        peg = input(f'Enter {red} number of peg to jump: {PROMPT} ')
+        for jump in jumps:
+            if peg == jump[0]:
+                return jump
 
 
 def apply_jump(peg, jump, board):
@@ -180,33 +180,59 @@ def game_over(board):
             remaining += 1
     match remaining:
         case 1:
-            print('1 peg left. Wow! GENIUS!! 50 points!!')
+            result = '1 peg left. Wow! GENIUS!! 50 points!!'
+            points = 50
         case 2:
-            print('2 pegs left. Above average! 25 points!')
+            result = '2 pegs left. Above average! 25 points!'
+            points = 25
         case 3:
-            print('3 pegs left. Just so-so. 10 points.')
+            result = '3 pegs left. Just so-so. 10 points.'
+            points = 10
         case _:
-            print(f'{remaining} pegs left. Not good. 0 points.')
+            result = f'{remaining} pegs left. Not good. 0 points.'
+            points = 0
+    print(f.apply(f'{result}'.center(WIDTH), ['GREEN']))
     print()
-    print(" GAME OVER ".center(WIDTH, '*'), end='\n\n')
-    quit()
+    print(''.center(WIDTH, '*'), end='\n\n')
+    return points
 
 
 def new_game():
+    print()
+    print(' BEGIN GAME '.center(WIDTH, '*'))
     board = NEW_BOARD.copy()
     show_board(board)
     remove_one_peg(board)
     show_board(board)
     while True:
         if is_game_over(board):
-            game_over(board)
+            points = game_over(board)
+            return points
         else:
             peg, jumps = choose_peg_to_move(board)
-            show_board(board, peg, jumps)
-            jump = pick_jump(jumps)
+            if len(jumps) > 1:
+                show_board(board, peg, jumps)
+                jump = pick_jump(jumps)
+            else:
+                jump = jumps[0]
             apply_jump(peg, jump, board)
             show_board(board)
 
 
+def start():
+    total_points = 0
+    print()
+    print(f.apply(''.center(WIDTH, '*'), ['BOLD']))
+    print(f.apply(' WELCOME TO IQ TESTER '.center(WIDTH, '*'), ['BOLD']))
+    print(f.apply(''.center(WIDTH, '*'), ['BOLD']), end='\n\n')
+    while True:
+        print(f.apply(f'>>> Your Total Score: {total_points} <<<'.center(WIDTH), ['BOLD', 'GREEN']))
+        print()
+        play = input(f'Want to start a new game (y/n)? {PROMPT} ')
+        if play in ['y', 'Y', '1']:
+            total_points += new_game()
+        else:
+            quit()
+
 if __name__ == "__main__":
-    new_game()
+    start()
