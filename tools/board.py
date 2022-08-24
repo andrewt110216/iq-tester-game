@@ -1,4 +1,4 @@
-from tools.formatter import Formatter, space
+from tools.formatter import space
 
 
 class Board:
@@ -112,10 +112,3 @@ class Board:
                     if moves[(i, j)] == []:
                         del moves[(i, j)]
         return moves
-
-if __name__ == "__main__":
-    f = Formatter(79)
-    b = Board(f)
-    for row in b.board:
-        print(row)
-    b.show()
