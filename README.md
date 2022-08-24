@@ -1,4 +1,4 @@
-`iq-tester` is a simple command-line version of the classic game "IQ Tester"
+`iqtester` is a simple command-line version of the classic game "IQ Tester"
 
 # Quick Start
 
