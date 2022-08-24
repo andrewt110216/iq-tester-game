@@ -6,6 +6,7 @@ class Session:
     """API for a session of gameplay of IQ Tester"""
 
     def __init__(self):
+        self.keep_playing = True
         self.f = Formatter(79)
         self.total_score = 0
         self.game = None
@@ -62,6 +63,13 @@ class Session:
     def quit(self):
         self.f.printf(*self.f.bold('Thanks for playing!'))
         self.footer()
+        self.keep_playing = False
+
+    def start(self):
+        self.header()
+        self.instructions()
+        while self.keep_playing:
+            self.main_menu()
 
     def main_menu(self):
         self.menu_options()
@@ -72,10 +80,8 @@ class Session:
             self.game = Game(self.f)
             self.total_score += self.game.play()
             self.played += 1
-            return True
         else:
             self.quit()
-            return False
 
     @space
     def game_header(self):
