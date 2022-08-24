@@ -1,6 +1,6 @@
 import time
-from formatter import space
-from board import Board
+from tools.formatter import space
+from tools.board import Board
 
 
 class Game:

@@ -1,5 +1,5 @@
-from formatter import Formatter, space
-from game import Game
+from tools.formatter import Formatter, space
+from tools.game import Game
 
 
 class Session:

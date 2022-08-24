@@ -1,4 +1,4 @@
-from formatter import Formatter, space
+from tools.formatter import Formatter, space
 
 
 class Board:
