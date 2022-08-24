@@ -1,4 +1,4 @@
-from tools.session import Session
+from .session import Session
 
 
 def main():

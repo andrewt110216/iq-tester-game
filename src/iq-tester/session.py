@@ -1,5 +1,5 @@
-from tools.formatter import Formatter, space
-from tools.game import Game
+from .formatter import Formatter, space
+from .game import Game
 
 
 class Session:
@@ -49,7 +49,7 @@ class Session:
     @space
     def menu_options(self):
         w = 40
-        print(("-" * 40).center(self.f.w))
+        print(("-" * w).center(self.f.w))
         self.f.print_bar(" ".center(w))
         self.f.print_bar(*self.f.bold("HOME MENU".center(w)))
         self.f.print_bar(" ".center(w))
@@ -79,7 +79,7 @@ class Session:
             *self.f.apply("> QUIT (any letter)".center(w), ["BOLD", "RED"])
         )
         self.f.print_bar(" ".center(w))
-        print(("-" * 40).center(self.f.w))
+        print(("-" * w).center(self.f.w))
 
     @space
     def footer(self):

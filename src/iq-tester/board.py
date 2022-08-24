@@ -1,4 +1,4 @@
-from tools.formatter import space
+from .formatter import space
 
 
 class Board:
@@ -57,7 +57,7 @@ class Board:
                     disp += val + " "
                 # no peg in hole
                 else:
-                    disp += "  "
+                    disp += ". "
             self.f.print_row(disp, w, i, off > 0)
         self.f.print_bar(" ".center(w))
         print(("-" * w).center(self.f.w))
