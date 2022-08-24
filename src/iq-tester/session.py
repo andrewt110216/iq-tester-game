@@ -36,12 +36,7 @@ class Session:
             "As you jump the pegs remove them from the board.".center(self.f.w)
         )
         print(
-            "Try to leave as few pegs on the board as possible.".center(
-                self.f.w
-            )
-        )
-        print(
-            "When you're out of moves, I'll let you know how you did!".center(
+            "Try to leave only one peg. See how you rate!.".center(
                 self.f.w
             )
         )
