@@ -23,7 +23,7 @@ class Session:
         self.f.printf(*self.f.apply(("*" * self.f.w), ["BOLD", "BLUE"]))
         self.f.printf(
             *self.f.apply(
-                ' WELCOME TO "I Q" (TM) TESTER '.center(self.f.w, "*"),
+                ' WELCOME TO IQ TESTER '.center(self.f.w, "*"),
                 ["BOLD", "BLUE"],
             )
         )
@@ -92,7 +92,7 @@ class Session:
             "Copyright (C) 1975 Venture MFG. Co., INC. U.S.A.".center(self.f.w)
         )
         print(
-            "Python CLI implementation by Andrew Tracey, 2022.".center(
+            "Python package `iq-tester` by Andrew Tracey, 2022.".center(
                 self.f.w
             )
         )
@@ -128,7 +128,3 @@ class Session:
             self.played += 1
         else:
             self.quit()
-
-    @space
-    def game_header(self):
-        self.f.printf(*self.f.bold(" START NEW GAME ".center(self.f.w, "*")))
