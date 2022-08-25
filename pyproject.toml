@@ -8,7 +8,7 @@ include = ["iqtester*"]
 
 [project]
 name = "iqtester"
-version = "0.0.1"
+version = "0.0.2"
 description = "A Python CLI version of the classic brain game IQ Tester"
 authors = [{ name = "Andrew Tracey", email = "act.project.alpha@gmail.com" }]
 license = { file = "LICENSE.md" }
@@ -21,7 +21,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 keywords = ["iq tester", "game", "classic game"]
 
 [project.optional-dependencies]
