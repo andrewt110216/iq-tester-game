@@ -8,7 +8,7 @@ include = ["iqtester*"]
 
 [project]
 name = "iqtester"
-version = "0.0.2"
+version = "0.0.3"
 description = "A Python CLI version of the classic brain game IQ Tester"
 authors = [{ name = "Andrew Tracey", email = "act.project.alpha@gmail.com" }]
 license = { file = "LICENSE.md" }
