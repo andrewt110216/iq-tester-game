@@ -19,14 +19,11 @@ class Formatter:
     # style formatting options {'name': ('string code', length of string code)}
     formats = {
         "PURPLE": ("\033[95m", 5),
-        "CYAN": ("\033[96m", 5),
-        "DARKCYAN": ("\033[36m", 5),
         "BLUE": ("\033[94m", 5),
         "GREEN": ("\033[92m", 5),
         "YELLOW": ("\033[93m", 5),
         "RED": ("\033[91m", 5),
         "BOLD": ("\033[1m", 4),
-        "UNDERLINE": ("\033[4m", 4),
         "END": ("\033[0m", 4),
     }
 
@@ -64,42 +61,35 @@ class Formatter:
         width = self.w - margin - 2 * len(in_b) + fmt_chars
         print(in_b + msg.center(width, fill) + in_b)
 
-    def bold(self, text):
-        return self.formats["BOLD"][0] + text + self.formats["END"][0], 8
-
-    def red(self, text):
-        return self.formats["RED"][0] + text + self.formats["END"][0], 8
+    def prompt(self, msg):
+        """Prompt the user, applying consistent formatting"""
+        msg = ">> " + msg + " >>"
+        n = len(msg)
+        msg, off = self.apply(msg, ["RED"])
+        print(msg.rjust((self.w // 2) + (n // 2) + off), end="")
+        return input(" ")
 
     def apply(self, text, options=["BOLD"]):
-        offset = 4  # END
+        """Return string with formatting applied and number of format chars"""
+        fmt_start = ''
+        fmt_chars = 0
         for format in options:
-            code = self.formats[format][0]
-            text = code + text
-            offset += len(code)
-        return text + self.formats["END"][0], offset + 1
-
-    def printf(self, text, offset=0):
-        print(text.center(self.w + offset))
-
-    def print_bar(self, text, offset=0):
-        print(("|" + text + "|").center(self.w + offset))
+            if format not in self.formats:
+                raise NotImplementedError(f'Style "{format}" not implemented.')
+            fmt_start += self.formats[format][0]
+            fmt_chars += self.formats[format][1]
+        fmt_chars += self.formats['END'][1]
+        return fmt_start + text + self.formats["END"][0], fmt_chars
 
     def print_row(self, text, inner_w, row, formatting=False):
+        """Print a row of the board accounting for the formatting applied"""
         margin = (self.w - inner_w) // 2
         print(" " * margin + "|", end="")
         if formatting:
-            pass
-            padding = (inner_w - (row + 1) * 2) // 2
+            padding = (inner_w - 2 - (row + 1) * 2) // 2
             print(" " * padding, end="")
             print(text, end="")
             print(" " * padding, end="")
         else:
-            print(text.center(inner_w), end="")
-        print("|" + " " * margin)
-
-    def prompt(self, msg):
-        msg = ">> " + msg + " >>"
-        n = len(msg)
-        msg, off = self.red(msg)
-        print(msg.rjust((self.w // 2) + (n // 2) + off), end="")
-        return input(" ")
+            print(text.center(inner_w - 2), end="")
+        print("|")

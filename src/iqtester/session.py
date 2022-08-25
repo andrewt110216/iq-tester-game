@@ -6,7 +6,7 @@ class Session:
     """API for a session of gameplay of IQ Tester"""
 
     def __init__(self):
-        self.f = Formatter(79)
+        self.f = Formatter(78)
         self.total_score = 0
         self.game = None
         self.played = 0

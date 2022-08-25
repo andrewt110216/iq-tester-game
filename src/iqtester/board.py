@@ -21,14 +21,15 @@ class Board:
         return board
 
     def pegs_left(self):
+        """Tally up the number of remaining pegs on the board"""
         count = 0
         for row in self.board:
             for val in row:
-                if val:
-                    count += 1
+                count += val is not None
         return count
 
     def locate_peg(self, peg):
+        """Search board for peg and return location or None if not found"""
         for i in range(self.rows):
             for j in range(i + 1):
                 if self.board[i][j] == peg:
@@ -39,28 +40,32 @@ class Board:
     def show(self, highlight=set(), color="RED"):
         """Print board to command line"""
         w = 30
-        print(" IQ Tester Board ".center(w, "-").center(self.f.w))
-        self.f.print_bar(" ".center(w))
-        # extract pegs that can be picked or jumped on next move
+        print(" IQ Tester Board ".center(w - 2, "-").center(self.f.w))
+        self.f.center("", in_w=w, in_b='|')
+
+        # iterate over each row of the board
         for i in range(self.rows):
             disp = ""
-            off = 0
+            fmt_chars = 0
+            # iterate over each peg and add it to display string
             for j in range(i + 1):
                 val = self.board[i][j]
-                # peg exists and can be picked
-                if val and (i, j) in highlight:
-                    val, inc = self.f.apply(val, ["BOLD", color])
+                # there is a peg in the position
+                if val:
+                    # check if it should be highlighted
+                    if (i, j) in highlight:
+                        val, inc = self.f.apply(val, ["BOLD", color])
+                        fmt_chars += inc
                     disp += val + " "
-                    off += inc
-                # peg exists but cannot be picked
-                elif val:
-                    disp += val + " "
-                # no peg in hole
+                # empty hole
                 else:
                     disp += ". "
-            self.f.print_row(disp, w, i, off > 0)
-        self.f.print_bar(" ".center(w))
-        print(("-" * w).center(self.f.w))
+            # print row
+            self.f.print_row(disp, w, i, fmt_chars > 0)
+
+        # finish boarder
+        self.f.center("", in_w=w, in_b='|')
+        print(("-" * (w - 2)).center(self.f.w))
 
     def remove(self, peg):
         """Remove peg from the board"""
