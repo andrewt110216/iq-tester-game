@@ -20,6 +20,7 @@ class Game:
             )
         )
 
+    @space
     def remove_one_peg(self):
         peg = ""
         while True:
@@ -32,6 +33,7 @@ class Game:
                 msg = "* You must choose a peg from the board. Try again *"
                 print(msg.center(self.f.w))
 
+    @space
     def pick_peg(self, moves):
         while True:
             pick = self.f.prompt("Choose a peg to move")
@@ -42,6 +44,7 @@ class Game:
                 msg = "* You must choose a red peg from the board. Try again *"
                 print(msg.center(self.f.w))
 
+    @space
     def pick_jump(self, jumps):
         while True:
             pick = self.f.prompt("Choose the peg you want to jump")
@@ -60,6 +63,7 @@ class Game:
         self.b.board[jumping[0]][jumping[1]] = None
         self.b.board[landing[0]][landing[1]] = peg
 
+    @space
     def game_over(self):
         self.f.printf(*self.f.bold(" GAME OVER ".center(self.f.w, "*")))
         print()

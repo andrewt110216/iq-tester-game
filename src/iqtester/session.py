@@ -6,12 +6,11 @@ class Session:
     """API for a session of gameplay of IQ Tester"""
 
     def __init__(self):
-        self.keep_playing = True
         self.f = Formatter(79)
         self.total_score = 0
         self.game = None
         self.played = 0
-        self.games = []
+        self.keep_playing = True
 
     def average(self):
         if self.played == 0:
@@ -20,106 +19,75 @@ class Session:
 
     @space
     def header(self):
-        self.f.printf(*self.f.apply(("*" * self.f.w), ["BOLD", "BLUE"]))
-        self.f.printf(
-            *self.f.apply(
-                ' WELCOME TO IQ TESTER '.center(self.f.w, "*"),
-                ["BOLD", "BLUE"],
-            )
-        )
-        self.f.printf(*self.f.apply(("*" * self.f.w), ["BOLD", "BLUE"]))
+        self.f.center('', fill='*', styles=["BOLD", "BLUE"])
+        self.f.center(' WELCOME TO IQ TESTER ', fill='*', styles=["BOLD"])
+        self.f.center('', fill='*', styles=["BOLD", "BLUE"])
 
     @space
     def instructions(self):
-        print("Start with any one hole empty.".center(self.f.w))
-        print(
-            "As you jump the pegs remove them from the board.".center(self.f.w)
-        )
-        print(
-            "Try to leave only one peg. See how you rate!.".center(
-                self.f.w
-            )
-        )
+        self.f.center("Start with any one hole empty.")
+        self.f.center("As you jump the pegs remove them from the board.")
+        self.f.center("Try to leave only one peg. See how you rate!.")
 
     @space
     def menu_options(self):
+        """Display the main menu including statistics and gameplay options"""
+        # menu width
         w = 40
-        print(("-" * w).center(self.f.w))
-        self.f.print_bar(" ".center(w))
-        self.f.print_bar(*self.f.bold("HOME MENU".center(w)))
-        self.f.print_bar(" ".center(w))
-        self.f.print_bar(
-            *self.f.apply(
-                f"GAMES PLAYED: {self.played}".center(w), ["BOLD", "GREEN"]
-            )
-        )
-        self.f.print_bar(
-            *self.f.apply(
-                f"YOUR TOTAL SCORE: {self.total_score}".center(w),
-                ["BOLD", "GREEN"],
-            )
-        )
-        self.f.print_bar(
-            *self.f.apply(
-                f"AVERAGE SCORE: {self.average()}".center(w), ["BOLD", "GREEN"]
-            )
-        )
-        self.f.print_bar(" ".center(w))
-        self.f.print_bar(
-            *self.f.apply(
-                "> Start new game (ENTER)".center(w), ["BOLD", "RED"]
-            )
-        )
-        self.f.print_bar(
-            *self.f.apply("> QUIT (any letter)".center(w), ["BOLD", "RED"])
-        )
-        self.f.print_bar(" ".center(w))
-        print(("-" * w).center(self.f.w))
+
+        # menu header
+        self.f.center('', fill='-', in_w=w - 2)
+        self.f.center("", in_w=w, in_b='|')
+        self.f.center("HOME MENU", ['BOLD'], in_w=w, in_b='|')
+        self.f.center("", in_w=w, in_b='|')
+
+        # game statistics
+        msg = f"GAMES PLAYED: {self.played}"
+        self.f.center(msg, ['BOLD', 'GREEN'], in_w=w, in_b='|')
+        msg = f"YOUR TOTAL SCORE: {self.total_score}"
+        self.f.center(msg, ['BOLD', 'GREEN'], in_w=w, in_b='|')
+        msg = f"AVERAGE SCORE: {self.average()}"
+        self.f.center(msg, ['BOLD', 'GREEN'], in_w=w, in_b='|')
+        self.f.center("", in_w=w, in_b='|')
+
+        # menu options
+        self.f.center("New Game [ENTER]", ['BOLD', 'RED'], in_w=w, in_b='|')
+        self.f.center("Quit [any letter]", ['BOLD', 'RED'], in_w=w, in_b='|')
+        self.f.center("", in_w=w, in_b='|')
+        self.f.center('', fill='-', in_w=w - 2)
 
     @space
     def footer(self):
-        print(
-            "For even more fun compete with someone. Lots of luck!".center(
-                self.f.w
-            )
-        )
-        print(
-            "Copyright (C) 1975 Venture MFG. Co., INC. U.S.A.".center(self.f.w)
-        )
-        print(
-            "Python package `iq-tester` by Andrew Tracey, 2022.".center(
-                self.f.w
-            )
-        )
-        print(
-            "Follow me: https://www.github.com/andrewt110216".center(self.f.w)
-        )
+        self.f.center("For even more fun compete with someone. Lots of luck!")
+        self.f.center("Copyright (C) 1975 Venture MFG. Co., INC. U.S.A.")
+        self.f.center("Python package `iq-tester` by Andrew Tracey, 2022.")
+        self.f.center("Follow me: https://www.github.com/andrewt110216")
 
+    @space
     def select_option(self):
-        print()
+        """Let user select a menu option"""
         play = self.f.prompt("PRESS ENTER FOR NEW GAME")
         return play
 
     @space
     def quit(self):
-        self.f.printf(*self.f.bold("Thanks for playing!"))
+        """Handle user selection to quit playing"""
+        self.f.center("Thanks for playing!", styles=['BOLD'])
         self.footer()
+        print()
         self.keep_playing = False
 
     def start(self):
+        """Drive gameplay"""
         self.header()
         self.instructions()
         while self.keep_playing:
-            self.main_menu()
-
-    def main_menu(self):
-        self.menu_options()
-        choice = self.select_option()
-        if choice.lower() == "":
-            if self.game:
-                self.games.append(self.game)
-            self.game = Game(self.f)
-            self.total_score += self.game.play()
-            self.played += 1
-        else:
-            self.quit()
+            self.menu_options()
+            choice = self.select_option()
+            if choice.lower() == "":
+                self.game = Game(self.f)
+                game_score = self.game.play()
+                self.total_score += game_score
+                self.played += 1
+            else:
+                self.quit()
