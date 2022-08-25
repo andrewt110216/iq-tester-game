@@ -21,7 +21,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 keywords = ["iq tester", "game", "classic game"]
 
 [project.optional-dependencies]
