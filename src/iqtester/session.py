@@ -19,9 +19,9 @@ class Session:
 
     @space
     def header(self):
-        self.f.center('', fill='*', styles=["BOLD", "BLUE"])
-        self.f.center(' WELCOME TO IQ TESTER ', fill='*', styles=["BOLD"])
-        self.f.center('', fill='*', styles=["BOLD", "BLUE"])
+        self.f.center('', fill='*', s=["BOLD", "BLUE"])
+        self.f.center(' WELCOME TO IQ TESTER ', fill='*', s=["BOLD"])
+        self.f.center('', fill='*', s=["BOLD", "BLUE"])
 
     @space
     def instructions(self):
@@ -69,12 +69,10 @@ class Session:
         play = self.f.prompt("PRESS ENTER FOR NEW GAME")
         return play
 
-    @space
     def quit(self):
         """Handle user selection to quit playing"""
-        self.f.center("Thanks for playing!", styles=['BOLD'])
+        self.f.center("Thanks for playing!", s=['BOLD'])
         self.footer()
-        print()
         self.keep_playing = False
 
     def start(self):

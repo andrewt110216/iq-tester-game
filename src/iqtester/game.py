@@ -73,7 +73,7 @@ class Game:
     @space
     def game_over(self):
         """Handle the end of the game and display results"""
-        self.f.center(" GAME OVER ", styles=["BOLD"], fill="*")
+        self.f.center(" GAME OVER ", s=["BOLD"], fill="*")
         print()
         left = self.b.pegs_left()
         match left:
@@ -89,7 +89,7 @@ class Game:
             case _:
                 points = 0
                 result = f"{left} pegs left. Not good. 0 points."
-        self.f.center(f"{result}", styles=["GREEN"])
+        self.f.center(f"{result}", s=["GREEN"])
         print()
         print(("*" * self.f.w))
         time.sleep(1)

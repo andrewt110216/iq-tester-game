@@ -16,7 +16,7 @@ class Board:
         board = []
         for i in range(self.rows):
             start = i * (i + 1) // 2
-            row = [x for x in self.pegs[start: start + i + 1]]
+            row = [x for x in self.pegs[start : start + i + 1]]
             board.append(row)
         return board
 
@@ -41,7 +41,7 @@ class Board:
         """Print board to command line"""
         w = 30
         print(" IQ Tester Board ".center(w - 2, "-").center(self.f.w))
-        self.f.center("", in_w=w, in_b='|')
+        self.f.center("", in_w=w, in_b="|")
 
         # iterate over each row of the board
         for i in range(self.rows):
@@ -61,10 +61,10 @@ class Board:
                 else:
                     disp += ". "
             # print row
-            self.f.print_row(disp, w, i, fmt_chars > 0)
+            self.f.center(disp, in_w=w, in_b="|", fc=fmt_chars)
 
         # finish boarder
-        self.f.center("", in_w=w, in_b='|')
+        self.f.center("", in_w=w, in_b="|")
         print(("-" * (w - 2)).center(self.f.w))
 
     def remove(self, peg):
