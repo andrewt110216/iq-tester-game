@@ -60,7 +60,7 @@ class Session:
     def footer(self):
         self.f.center("For even more fun compete with someone. Lots of luck!")
         self.f.center("Copyright (C) 1975 Venture MFG. Co., INC. U.S.A.")
-        self.f.center("Python package `iq-tester` by Andrew Tracey, 2022.")
+        self.f.center("Python package `iqtester` by Andrew Tracey, 2022.")
         self.f.center("Follow me: https://www.github.com/andrewt110216")
 
     @space

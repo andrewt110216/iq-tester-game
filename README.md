@@ -16,7 +16,7 @@ Python 3.7+
 
 ## Mac / Linux
 ```
-python3 -m pip install iqtester
+pip install iqtester
 ```
 
 ## Windows
