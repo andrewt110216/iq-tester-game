@@ -12,7 +12,7 @@ Try to leave only one peg. See how you rate!
 
 ## Support Python Versions
 
-Python 3.0+
+Python 3.7+
 
 ## Mac / Linux
 ```
