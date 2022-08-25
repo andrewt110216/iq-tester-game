@@ -1,4 +1,5 @@
 import time
+import copy
 from .formatter import space
 from .board import Board
 
@@ -9,6 +10,8 @@ class Game:
     def __init__(self, formatter):
         self.f = formatter
         self.b = Board(self.f, 5)
+        self.moves = None
+        self.prev_states = []
 
     @space
     def header(self):
@@ -21,7 +24,13 @@ class Game:
         self.f.center("* Invalid selection. Try again. *")
 
     def validate(self, peg):
-        return len(peg) == 1 and (97 <= ord(peg) < 97 + self.b.holes)
+        """Check if user input is a single letter"""
+        return len(peg) == 1 and (97 <= ord(peg.lower()) < 97 + self.b.holes)
+
+    def save_state(self):
+        """Append current board to the Board object's list of `prev_boards`"""
+        state = tuple(map(copy.deepcopy, [self.b.board, self.moves]))
+        self.prev_states.append(state)
 
     @space
     def remove_one_peg(self):
@@ -35,16 +44,19 @@ class Game:
             print()
 
     @space
-    def pick_peg(self, moves):
+    def pick_peg(self):
         """Ask the user to pick a peg for the next move"""
         while True:
-            pick = self.f.prompt("Choose a peg to move")
+            pick = self.f.prompt("Choose a peg to move (or '.' to go back)")
+            if pick == '.':
+                self.go_back()
+                continue
             if self.validate(pick):
                 location = self.b.locate_peg(pick)
-                if location in moves:
+                if self.moves and location in self.moves:
                     return location
             # invalid pick. highlight possible choices and try again
-            self.b.show(moves.keys())
+            self.b.show(self.moves.keys())
             self.invalid()
             print()
             self.f.center("* The possible pegs to move are highlighted red. *")
@@ -69,6 +81,19 @@ class Game:
         self.b.board[pick[0]][pick[1]] = None
         self.b.board[over[0]][over[1]] = None
         self.b.board[to[0]][to[1]] = peg
+
+    @space
+    def go_back(self):
+        """Revert the game to its previous state"""
+        # make sure there exist previous states of the board
+        if not self.prev_states:
+            print()
+            self.f.center("* Unable to go back *")
+            print()
+            return
+        # pop prior state and update board and moves, then show updated board
+        self.b.board, self.moves = self.prev_states.pop()
+        self.b.show()
 
     @space
     def game_over(self):
@@ -102,17 +127,19 @@ class Game:
         self.b.show()
         self.remove_one_peg()
         while True:
-            moves = self.b.get_moves()
-            if len(moves) == 0:
+            self.moves = self.b.get_moves()
+            # game is over if no possible moves
+            if len(self.moves) == 0:
                 self.b.show()
                 return self.game_over()
             self.b.show()
-            pick = self.pick_peg(moves)
-            jumps = moves[pick]
+            pick = self.pick_peg()
+            jumps = self.moves[pick]
             if len(jumps) == 1:
                 jump = jumps[0]
             else:
                 jumpees = set([jump[0] for jump in jumps])
                 self.b.show(jumpees, color="GREEN")
                 jump = self.pick_jump(jumps)
+            self.save_state()
             self.make_jump(pick, jump)
