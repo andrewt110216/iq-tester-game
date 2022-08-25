@@ -1,5 +1,7 @@
 `iqtester` is a simple command-line version of the classic game "IQ Tester"
 
+[iqtester on PyPI](https://pypi.org/project/iqtester/)
+
 # Quick Start
 
 ## How to Play
