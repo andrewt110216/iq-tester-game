@@ -84,7 +84,7 @@ class Session:
         while self.keep_playing:
             self.menu_options()
             choice = self.select_option()
-            if choice.lower() == "":
+            if choice == "":
                 self.game = Game(self.f)
                 game_score = self.game.play()
                 self.total_score += game_score

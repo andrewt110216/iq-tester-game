@@ -20,13 +20,16 @@ class Game:
     def invalid(self):
         self.f.center("* Invalid selection. Try again. *")
 
+    def validate(self, peg):
+        return len(peg) == 1 and (97 <= ord(peg) < 97 + self.b.holes)
+
     @space
     def remove_one_peg(self):
         """Ask the user to remove one peg from the board to start the game"""
         peg = ""
         while True:
             peg = self.f.prompt("Pick a peg to remove to start the game")
-            if self.b.remove(peg):
+            if self.validate(peg) and self.b.remove(peg):
                 break
             self.invalid()
             print()
@@ -36,9 +39,11 @@ class Game:
         """Ask the user to pick a peg for the next move"""
         while True:
             pick = self.f.prompt("Choose a peg to move")
-            location = self.b.locate_peg(pick)
-            if location in moves:
-                return location
+            if self.validate(pick):
+                location = self.b.locate_peg(pick)
+                if location in moves:
+                    return location
+            # invalid pick. highlight possible choices and try again
             self.b.show(moves.keys())
             self.invalid()
             print()
@@ -50,10 +55,11 @@ class Game:
         """Ask the user to choose which peg they want to jump over"""
         while True:
             pick = self.f.prompt("Choose the peg you want to jump")
-            location = self.b.locate_peg(pick)
-            for jump in jumps:
-                if jump[0] == location:
-                    return jump
+            if self.validate(pick):
+                location = self.b.locate_peg(pick)
+                for jump in jumps:
+                    if jump[0] == location:
+                        return jump
             self.invalid()
 
     def make_jump(self, pick, jump):
