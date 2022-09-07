@@ -1,6 +1,9 @@
+# About
+![Build](https://img.shields.io/github/workflow/status/andrewt110216/iq-tester-game/Tests?style=plastic)
+
 `iqtester` is a simple command-line version of the classic game "IQ Tester"
 
-[iqtester on PyPI](https://pypi.org/project/iqtester/)
+[PyPI Home Page](https://pypi.org/project/iqtester/)
 
 # Quick Start
 
