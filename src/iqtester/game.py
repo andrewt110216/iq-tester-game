@@ -7,9 +7,9 @@ from .board import Board
 class Game:
     """Manager for a game of IQ Tester"""
 
-    def __init__(self, formatter):
+    def __init__(self, formatter, size=5):
         self.f = formatter
-        self.b = Board(self.f, 5)
+        self.b = Board(self.f, size)
         self.moves = None
         self.prev_states = []
 
