@@ -83,16 +83,16 @@ class Session:
 
     @space
     def update_board_size(self):
-        lower = 4  # minimum board size (3 or less doesn't work)
-        upper = 6  # maximum board size (7 or more uses > 26 pegs)
+        low = 4  # minimum board size (3 or less doesn't work)
+        high = 6  # maximum board size (7 or more uses > 26 pegs)
         while True:
-            n = self.f.prompt(f"Enter desired board size ({lower} to {upper}):")
+            n = self.f.prompt(f"Enter desired board size ({low} to {high}):")
             try:
                 n = int(n)
-                if lower <= n <= upper:
+                if low <= n <= high:
                     break
             except NameError:
-                self.f.center("Board size must be an integer value. Try again.")
+                self.f.center("Board size must be an integer. Try again.")
 
         print()
         self.f.center(f"Updating board size to {n}...")
@@ -136,12 +136,12 @@ class Session:
                 self.total_score += game_score
                 self.played += 1
             elif choice == "s":
-                    self.settings_menu()
-                    setting_choice = self.setting_selection().lower()
-                    if setting_choice == "u":
-                        self.update_board_size()
-                    time.sleep(0.8)
-                    self.f.center("Returning to Main Menu...")
-                    time.sleep(1)
+                self.settings_menu()
+                setting_choice = self.setting_selection().lower()
+                if setting_choice == "u":
+                    self.update_board_size()
+                time.sleep(0.8)
+                self.f.center("Returning to Main Menu...")
+                time.sleep(1)
             else:
                 self.quit()

@@ -16,7 +16,7 @@ class Board:
         board = []
         for i in range(self.rows):
             start = i * (i + 1) // 2
-            row = [x for x in self.pegs[start : start + i + 1]]
+            row = [x for x in self.pegs[start: start + i + 1]]
             board.append(row)
         return board
 
