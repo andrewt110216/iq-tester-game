@@ -1,3 +1,4 @@
+import time
 from .formatter import Formatter, space
 from .game import Game
 
@@ -8,6 +9,7 @@ class Session:
     def __init__(self):
         self.f = Formatter(78)
         self.total_score = 0
+        self.board_size = 5
         self.game = None
         self.played = 0
         self.keep_playing = True
@@ -52,9 +54,49 @@ class Session:
 
         # menu options
         self.f.center("New Game [ENTER]", ['BOLD', 'RED'], in_w=w, in_b='|')
-        self.f.center("Quit [any letter]", ['BOLD', 'RED'], in_w=w, in_b='|')
+        self.f.center("Edit Settings [s]", ['BOLD', 'RED'], in_w=w, in_b='|')
+        self.f.center("Quit [q]", ['BOLD', 'RED'], in_w=w, in_b='|')
+
+        # bottom border of menu
         self.f.center("", in_w=w, in_b='|')
         self.f.center('', fill='-', in_w=w - 2)
+
+    def settings_menu(self):
+        """Allow user to change certain gameplay settings"""
+        # menu width
+        w = 40
+
+        # menu header
+        self.f.center('', fill='-', in_w=w - 2)
+        self.f.center("", in_w=w, in_b='|')
+        self.f.center("SETTINGS MENU", ['BOLD'], in_w=w, in_b='|')
+        self.f.center("", in_w=w, in_b='|')
+
+        # menu options
+        n = self.board_size
+        self.f.center(f"Update Board Size [u]: {n}", in_w=w, in_b='|')
+        self.f.center("Return to Main Menu [m]", in_w=w, in_b='|')
+
+        # bottom border of menu
+        self.f.center("", in_w=w, in_b='|')
+        self.f.center('', fill='-', in_w=w - 2)
+
+    @space
+    def update_board_size(self):
+        low = 4  # minimum board size (3 or less doesn't work)
+        high = 6  # maximum board size (7 or more uses > 26 pegs)
+        while True:
+            n = self.f.prompt(f"Enter desired board size ({low} to {high}):")
+            try:
+                n = int(n)
+                if low <= n <= high:
+                    break
+            except NameError:
+                self.f.center("Board size must be an integer. Try again.")
+
+        print()
+        self.f.center(f"Updating board size to {n}...")
+        self.board_size = n
 
     @space
     def footer(self):
@@ -64,10 +106,16 @@ class Session:
         self.f.center("Follow me: https://www.github.com/andrewt110216")
 
     @space
-    def select_option(self):
+    def main_selection(self):
         """Let user select a menu option"""
         play = self.f.prompt("PRESS ENTER FOR NEW GAME")
         return play
+
+    @space
+    def setting_selection(self):
+        """Let user select an option from the settings menu"""
+        setting = self.f.prompt("Make a selection from the above options")
+        return setting
 
     def quit(self):
         """Handle user selection to quit playing"""
@@ -81,11 +129,19 @@ class Session:
         self.instructions()
         while self.keep_playing:
             self.menu_options()
-            choice = self.select_option()
+            choice = self.main_selection().lower()
             if choice == "":
-                self.game = Game(self.f)
+                self.game = Game(self.f, self.board_size)
                 game_score = self.game.play()
                 self.total_score += game_score
                 self.played += 1
+            elif choice == "s":
+                self.settings_menu()
+                setting_choice = self.setting_selection().lower()
+                if setting_choice == "u":
+                    self.update_board_size()
+                time.sleep(0.8)
+                self.f.center("Returning to Main Menu...")
+                time.sleep(1)
             else:
                 self.quit()
