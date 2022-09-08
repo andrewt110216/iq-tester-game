@@ -140,7 +140,7 @@ class Session:
                 setting_choice = self.setting_selection().lower()
                 if setting_choice == "u":
                     self.update_board_size()
-                time.sleep(0.8)
+                    time.sleep(0.8)
                 self.f.center("Returning to Main Menu...")
                 time.sleep(1)
             else:
