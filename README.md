@@ -9,7 +9,7 @@
 
 ## How to Play
 
-IQ Tester is played on a triangular board with 15 holes.
+IQ Tester is played on a triangular board, typically with 5 rows of holes and pegs.
 
 Start with any one hole empty. As you jump the pegs remove them from the board.
 
