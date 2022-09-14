@@ -92,7 +92,7 @@ class Session:
         # menu options
         n = self.board_size
         size_row = f"Board Size ({n})".ljust(l, '.') + "[s]".rjust(r, '.')
-        return_row = f"Return".ljust(l, '.') + "[r]".rjust(r, '.')
+        return_row = "Return".ljust(l, '.') + "[r]".rjust(r, '.')
         self.f.center(size_row, in_w=w, in_b='|')
         self.f.center(return_row, in_w=w, in_b='|')
 
