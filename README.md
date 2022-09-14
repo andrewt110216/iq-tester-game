@@ -1,4 +1,5 @@
 # About
+<!-- UPDATE VERSION IN BADGE MANUALLY -->
 ![PyPI Version](https://img.shields.io/badge/pypi-v0.1.1-orange)
 ![Build](https://img.shields.io/github/workflow/status/andrewt110216/iq-tester-game/Tests?style=plastic)
 
