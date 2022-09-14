@@ -14,7 +14,7 @@ class Session:
         self.played = 0
         self.keep_playing = True
 
-    def average(self):
+    def get_average(self):
         if self.played == 0:
             return round(0, 1)
         return round(self.total_score / self.played, 1)
@@ -32,7 +32,7 @@ class Session:
         self.f.center("Try to leave only one peg. See how you rate!.")
 
     @space
-    def menu_options(self):
+    def main_menu(self):
         """Display the main menu including statistics and gameplay options"""
         # menu width
         w = 40
@@ -40,22 +40,38 @@ class Session:
         # menu header
         self.f.center('', fill='-', in_w=w - 2)
         self.f.center("", in_w=w, in_b='|')
-        self.f.center("HOME MENU", ['BOLD'], in_w=w, in_b='|')
+        self.f.center("MAIN MENU", ['BOLD'], in_w=w, in_b='|')
         self.f.center("", in_w=w, in_b='|')
 
         # game statistics
-        msg = f"GAMES PLAYED: {self.played}"
-        self.f.center(msg, ['BOLD', 'GREEN'], in_w=w, in_b='|')
-        msg = f"YOUR TOTAL SCORE: {self.total_score}"
-        self.f.center(msg, ['BOLD', 'GREEN'], in_w=w, in_b='|')
-        msg = f"AVERAGE SCORE: {self.average()}"
-        self.f.center(msg, ['BOLD', 'GREEN'], in_w=w, in_b='|')
+        # format total and average scores for display
+        sc = f"{self.total_score:,}"
+        average = self.get_average()
+        if average % 1 == 0:
+            average = int(average)
+        avg = f"{average:,}"
+
+        # assemble strings for each statistic, aligned left and right
+        l, r = 18, max(6, len(sc), len(avg)) + 1
+        games_played = "GAMES PLAYED: ".ljust(l) + str(self.played).rjust(r)
+        total_score = "YOUR TOTAL SCORE: ".ljust(l) + sc.rjust(r)
+        average_score = "AVERAGE SCORE: ".ljust(l) + avg.rjust(r)
+
+        # display each menu row with formatting
+        formats = ['BOLD', 'GREEN']
+        self.f.center(games_played, formats, in_w=w, in_b='|')
+        self.f.center(total_score, formats, in_w=w, in_b='|')
+        self.f.center(average_score, formats, in_w=w, in_b='|')
         self.f.center("", in_w=w, in_b='|')
 
-        # menu options
-        self.f.center("New Game [ENTER]", ['BOLD', 'RED'], in_w=w, in_b='|')
-        self.f.center("Edit Settings [s]", ['BOLD', 'RED'], in_w=w, in_b='|')
-        self.f.center("Quit [q]", ['BOLD', 'RED'], in_w=w, in_b='|')
+        # gameplay options
+        formats = ['BOLD', 'RED']
+        new_game_row = "New Game".ljust(l, '.') + "[ENTER]".rjust(r, '.')
+        settings_row = "Settings".ljust(l, '.') + "[s]".rjust(r, '.')
+        quit_row = "Quit".ljust(l, '.') + "[q]".rjust(r, '.')
+        self.f.center(new_game_row, formats, in_w=w, in_b='|')
+        self.f.center(settings_row, formats, in_w=w, in_b='|')
+        self.f.center(quit_row, formats, in_w=w, in_b='|')
 
         # bottom border of menu
         self.f.center("", in_w=w, in_b='|')
@@ -65,6 +81,7 @@ class Session:
         """Allow user to change certain gameplay settings"""
         # menu width
         w = 40
+        l, r = 18, 4
 
         # menu header
         self.f.center('', fill='-', in_w=w - 2)
@@ -74,8 +91,10 @@ class Session:
 
         # menu options
         n = self.board_size
-        self.f.center(f"Update Board Size [u]: {n}", in_w=w, in_b='|')
-        self.f.center("Return to Main Menu [m]", in_w=w, in_b='|')
+        size_row = f"Board Size ({n})".ljust(l, '.') + "[s]".rjust(r, '.')
+        return_row = f"Return".ljust(l, '.') + "[r]".rjust(r, '.')
+        self.f.center(size_row, in_w=w, in_b='|')
+        self.f.center(return_row, in_w=w, in_b='|')
 
         # bottom border of menu
         self.f.center("", in_w=w, in_b='|')
@@ -106,16 +125,9 @@ class Session:
         self.f.center("Follow me: https://www.github.com/andrewt110216")
 
     @space
-    def main_selection(self):
-        """Let user select a menu option"""
-        play = self.f.prompt("PRESS ENTER FOR NEW GAME")
-        return play
-
-    @space
-    def setting_selection(self):
-        """Let user select an option from the settings menu"""
-        setting = self.f.prompt("Make a selection from the above options")
-        return setting
+    def menu_selection(self):
+        """Prompt user to select menu option and return lowercased choice"""
+        return self.f.prompt("Select a menu option").lower()
 
     def quit(self):
         """Handle user selection to quit playing"""
@@ -128,17 +140,17 @@ class Session:
         self.header()
         self.instructions()
         while self.keep_playing:
-            self.menu_options()
-            choice = self.main_selection().lower()
-            if choice == "":
+            self.main_menu()
+            main_choice = self.menu_selection()
+            if main_choice == "":
                 self.game = Game(self.f, self.board_size)
                 game_score = self.game.play()
                 self.total_score += game_score
                 self.played += 1
-            elif choice == "s":
+            elif main_choice == "s":
                 self.settings_menu()
-                setting_choice = self.setting_selection().lower()
-                if setting_choice == "u":
+                setting_choice = self.menu_selection()
+                if setting_choice == "s":
                     self.update_board_size()
                     time.sleep(0.8)
                 self.f.center("Returning to Main Menu...")

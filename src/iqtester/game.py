@@ -101,23 +101,22 @@ class Game:
         self.f.center(" GAME OVER ", s=["BOLD"], fill="*")
         print()
         left = self.b.pegs_left()
-        match left:
-            case 1:
-                points = 50
-                result = "1 peg left. Wow! GENIUS!! 50 points!!"
-            case 2:
-                points = 25
-                result = "2 pegs left. Above average! 25 points!"
-            case 3:
-                points = 10
-                result = "3 pegs left. Just so-so. 10 points."
-            case _:
-                points = 0
-                result = f"{left} pegs left. Not good. 0 points."
+        if left == 1:
+            points = 50
+            result = "1 peg left. Wow! GENIUS!! 50 points!!"
+        elif left == 2:
+            points = 25
+            result = "2 pegs left. Above average! 25 points!"
+        elif left == 3:
+            points = 10
+            result = "3 pegs left. Just so-so. 10 points."
+        else:
+            points = 0
+            result = f"{left} pegs left. Not good. 0 points."
         self.f.center(f"{result}", s=["GREEN"])
         print()
         print(("*" * self.f.w))
-        time.sleep(1)
+        time.sleep(1.25)
         return points
 
     @space
