@@ -40,5 +40,5 @@ python3 -m iqtester
 
 ## Gameplay
 
-<img src="demo-gifs/play.gif" width="50%" height="50%">
+<img src="demo-gifs/play.gif" width="75%" height="75%">
 <br>
