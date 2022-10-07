@@ -40,5 +40,10 @@ python3 -m iqtester
 
 ## Gameplay
 
-<img src="demo-gifs/play.gif" width="100%" height="100%">
+<img src="demo-gifs/play.gif">
+<br>
+
+## Feature: Undo Jump (Back)
+
+<img src="demo-gifs/back.gif">
 <br>
