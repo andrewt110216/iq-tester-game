@@ -55,3 +55,25 @@ python3 -m iqtester
 <img src="demo-gifs/back.gif">
 
 <br>
+
+## Multiple Pegs to Jump
+
+*If you pick a peg that has multiple potential jumps, the possibilities will be highlighted.*
+
+*Choose the peg you'd like to jump over!*
+
+<img src="demo-gifs/multiple-jumps.gif">
+
+<br>
+
+## Need a Challenge?!
+
+*Maybe you're a **GENIUS** and `iqtester` tells you so over and over again. Kind of like me (I mean look at that score).*
+
+*Once you get over the flattery and are ready to be challenged again, you can make the board size larger.*
+
+*That ought to keep you entertained long enough!*
+
+<img src="demo-gifs/increase-size.gif">
+
+<br>
