@@ -35,3 +35,10 @@ py -m pip install iqtester
 ```
 python3 -m iqtester
 ```
+
+# Demos
+
+## Gameplay
+
+<img src="demo-gifs/play.gif" width="50%" height="50%">
+<br>
