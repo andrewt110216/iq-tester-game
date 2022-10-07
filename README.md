@@ -40,10 +40,18 @@ python3 -m iqtester
 
 ## Gameplay
 
+*A simple (albeit not very successful!) game looks like this.*
+
+*As the game begins, focus on the bottom of the screen to see the current board.*
+
 <img src="demo-gifs/play.gif">
+
 <br>
 
-## Feature: Undo Jump (Back)
+## Feature: Undo a Jump (Go Back)
+
+*If you make a mistake, or see a better move, use a period to undo your last move!*
 
 <img src="demo-gifs/back.gif">
+
 <br>
