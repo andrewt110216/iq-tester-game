@@ -114,7 +114,7 @@ class Session:
                 n = int(n)
                 if low <= n <= high:
                     break
-            except  (TypeError, ValueError, NameError):
+            except (TypeError, ValueError, NameError):
                 self.f.center("Board size must be an integer. Try again.")
 
         print()
