@@ -13,6 +13,7 @@ class Session:
         self.game = None
         self.played = 0
         self.keep_playing = True
+        self.pause = 1.25
 
     def get_average(self):
         if self.played == 0:
@@ -92,8 +93,11 @@ class Session:
         # menu options
         n = self.board_size
         size_row = f"Board Size ({n})".ljust(l, '.') + "[s]".rjust(r, '.')
+        p = self.pause
+        pause_row = f"Pause Time ({p})".ljust(l, '.') + "[p]".rjust(r, '.')
         return_row = "Return".ljust(l, '.') + "[r]".rjust(r, '.')
         self.f.center(size_row, in_w=w, in_b='|')
+        self.f.center(pause_row, in_w=w, in_b='|')
         self.f.center(return_row, in_w=w, in_b='|')
 
         # bottom border of menu
@@ -110,12 +114,30 @@ class Session:
                 n = int(n)
                 if low <= n <= high:
                     break
-            except NameError:
+            except (TypeError, ValueError, NameError):
                 self.f.center("Board size must be an integer. Try again.")
 
         print()
         self.f.center(f"Updating board size to {n}...")
         self.board_size = n
+
+    @space
+    def update_pause(self):
+        low = 0
+        high = 3
+        while True:
+            prompt = f"Enter the desired pause ({low} to {high} seconds):"
+            p = self.f.prompt(prompt)
+            try:
+                p = float(p)
+                if low <= p <= high:
+                    break
+            except (TypeError, ValueError, NameError):
+                self.f.center("Pause must be a float or int. Try again.")
+
+        print()
+        self.f.center(f"Pause has been updated to {p:.2f} seconds...")
+        self.pause = p
 
     @space
     def footer(self):
@@ -143,7 +165,7 @@ class Session:
             self.main_menu()
             main_choice = self.menu_selection()
             if main_choice == "":
-                self.game = Game(self.f, self.board_size)
+                self.game = Game(self.f, self.board_size, self.pause)
                 game_score = self.game.play()
                 self.total_score += game_score
                 self.played += 1
@@ -152,6 +174,9 @@ class Session:
                 setting_choice = self.menu_selection()
                 if setting_choice == "s":
                     self.update_board_size()
+                    time.sleep(0.8)
+                elif setting_choice == "p":
+                    self.update_pause()
                     time.sleep(0.8)
                 self.f.center("Returning to Main Menu...")
                 time.sleep(1)
