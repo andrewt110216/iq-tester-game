@@ -7,11 +7,12 @@ from .board import Board
 class Game:
     """Manager for a game of IQ Tester"""
 
-    def __init__(self, formatter, size=5):
+    def __init__(self, formatter, size=5, pause=1.25):
         self.f = formatter
         self.b = Board(self.f, size)
         self.moves = None
         self.prev_states = []
+        self.pause = pause
 
     @space
     def header(self):
@@ -116,7 +117,7 @@ class Game:
         self.f.center(f"{result}", s=["GREEN"])
         print()
         print(("*" * self.f.w))
-        time.sleep(1.25)
+        time.sleep(self.pause)
         return points
 
     @space
