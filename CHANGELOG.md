@@ -1,5 +1,15 @@
 # Changelog
 
+<!-- Next Version In Progress -->
+## v0.2.0 (TBD)
+
+### Feature
+
+- Added option to ask for a **hint** for the optimal next move
+- Added option to **auto-complete** the current game with an optimal outcome
+- Added settings option to change the pause time after completing a game
+- Added Demo gifs to README
+
 ## v0.1.1 (09/14/2022)
 
 ### Feature
