@@ -1,145 +1,228 @@
+from typing import Dict, List, Sequence, Set
 import time
 import copy
-from .formatter import space
-from .board import Board
+from .formatter import space, Formatter
+from .board import Board, BoardLocation, Jump, MovesMap, Peg
 
 
 class Game:
     """Manager for a game of IQ Tester"""
 
-    def __init__(self, formatter, size=5, pause=1.25):
-        self.f = formatter
-        self.b = Board(self.f, size)
-        self.moves = None
-        self.prev_states = []
+    def __init__(self, f: Formatter, size: int = 5, pause: float = 2) -> None:
+
+        # The Formatter instance used to format print statements
+        self.f = f
+
+        # The game board (an instance of the Board class)
+        self.b = Board(size, self.f)
+
+        # Store a list of previous states of the board, with the most recent
+        # state at the end of the list
+        self.previous_board_states: List[Board] = []
+
+        # Setting for length (in seconds) of pause after game over
         self.pause = pause
 
+    def play(self) -> int:
+        """Initiate and handle the game logic"""
+
+        # Display New Game header
+        self.print_new_game_header()
+
+        # Print initial board
+        self.b.print_board()
+
+        # Prompt user to remove one peg
+        self.remove_one_peg()
+
+        # Gameplay loop
+        while True:
+
+            # Print current status of board
+            self.b.print_board()
+
+            # Check if game is over (i.e. no possible moves)
+            if not self.b.moves_map:
+                return self.game_over()
+
+            # Prompt user to pick a peg to move
+            peg: Peg = self.choose_peg_to_move()
+
+            # Handle case of only a single possible jump for peg
+            jump: Jump
+            if len(self.b.moves_map[peg]) == 1:
+                jump = self.b.moves_map[peg][0]
+
+            # Handle case of multiple possible jumps for peg
+            else:
+
+                # Prompt user to choose a jump from the possible jumps
+                jump = self.choose_jump_for_peg(peg)
+
+            # Save the current state of the board before executing the move
+            self.save_state()
+
+            # Make the move, consisting of the chosen peg and chosen jump
+            self.b.make_move(peg, jump)
+
     @space
-    def header(self):
-        self.f.center(" START NEW GAME ", fill="*")
-        print()
+    def print_new_game_header(self) -> None:
+        """Print header rows for a new game"""
+        self.f.center(" START NEW GAME ", fill_char="*", end="\n\n")
         self.f.center("Each letter in the board represents a peg in a hole.")
 
     @space
-    def invalid(self):
-        self.f.center("* Invalid selection. Try again. *")
+    def remove_one_peg(self) -> None:
+        """Prompt user to choose one peg to remove from the board to start"""
 
-    def validate(self, peg):
-        """Check if user input is a single letter"""
-        return len(peg) == 1 and (97 <= ord(peg.lower()) < 97 + self.b.holes)
-
-    def save_state(self):
-        """Append current board to the Board object's list of `prev_boards`"""
-        state = tuple(map(copy.deepcopy, [self.b.board, self.moves]))
-        self.prev_states.append(state)
-
-    @space
-    def remove_one_peg(self):
-        """Ask the user to remove one peg from the board to start the game"""
-        peg = ""
+        # Infinite loop to re-prompt until input is valid
         while True:
-            peg = self.f.prompt("Pick a peg to remove to start the game")
-            if self.validate(peg) and self.b.remove(peg):
-                break
-            self.invalid()
-            print()
 
-    @space
-    def pick_peg(self):
-        """Ask the user to pick a peg for the next move"""
-        while True:
-            pick = self.f.prompt("Choose a peg to move (or '.' to go back)")
-            if pick == '.':
-                self.go_back()
-                continue
-            if self.validate(pick):
-                location = self.b.locate_peg(pick)
-                if self.moves and location in self.moves:
-                    return location
-            # invalid pick. highlight possible choices and try again
-            self.b.show(self.moves.keys())
-            self.invalid()
-            print()
-            self.f.center("* The possible pegs to move are highlighted red. *")
-            print()
+            # Prompt user to choose a peg
+            self.f.center("The game begins with one hole on the board empty.")
+            user_input = self.f.prompt("Choose a peg to remove")
 
-    @space
-    def pick_jump(self, jumps):
-        """Ask the user to choose which peg they want to jump over"""
-        while True:
-            pick = self.f.prompt("Choose the peg you want to jump")
-            if self.validate(pick):
-                location = self.b.locate_peg(pick)
-                for jump in jumps:
-                    if jump[0] == location:
-                        return jump
+            # Handle case of valid selection
+            if user_input in self.b.peg_locations_map:
+                self.b.remove_peg(user_input)
+                return
+
+            # Handle case of invalid selection
             self.invalid()
 
-    def make_jump(self, pick, jump):
-        """Update the board to reflect the chosen jump"""
-        over, to = jump
-        peg = self.b.board[pick[0]][pick[1]]
-        self.b.board[pick[0]][pick[1]] = None
-        self.b.board[over[0]][over[1]] = None
-        self.b.board[to[0]][to[1]] = peg
+    def choose_peg_to_move(self) -> Peg:
+        """Prompt user to choose a peg to move"""
+
+        # Inifinte loop to re-prompt until input is valid
+        while True:
+
+            # Print list of special options and prompt user
+            self.f.center("Special Options: Go Back ('.') | Hint ('>')")
+            user_input = self.f.prompt(
+                "Choose a peg to move (or a special option)"
+                )
+
+            # Handle special options
+            if user_input == '.':
+                self.revert_state()
+                self.b.print_board()
+            elif user_input == '>':
+                self.show_hint()
+
+            # Handle case of valid peg selection with possible moves
+            elif (
+                user_input in self.b.peg_locations_map
+                and self.b.moves_map[user_input]
+            ):
+                return user_input
+
+            # Handle case of invalid user input
+            else:
+                # Notify user of invalid input
+                self.invalid()
+
+                # Get list of pegs that could be moved
+                pegs_that_can_move = {
+                    peg for peg, jumps in self.b.moves_map.items() if jumps
+                }
+
+                # Print the board, highlighting the pegs that can be moved
+                self.b.print_board(pegs_that_can_move)
+                self.f.center("* Only highlighted pegs can move *")
 
     @space
-    def go_back(self):
-        """Revert the game to its previous state"""
-        # make sure there exist previous states of the board
-        if not self.prev_states:
+    def choose_jump_for_peg(self, peg: Peg) -> Jump:
+        """Prompt user to choose one of multiple possible jumps for peg"""
+
+        # Initialize an empty set to store the possible pegs to jump over
+        possible_pegs_to_jump: Set[Peg] = set()
+
+        # Initialize dictionary mapping each peg to be jumped to its jump index
+        peg_to_jump_to_index_map: Dict[Peg, int] = {}
+
+        # Iterate over possible jumps to populate above two data structures
+        for i, jump in enumerate(self.b.moves_map[peg]):
+            location_jumped: BoardLocation = jump[0]
+            peg_to_jump = self.b.board[location_jumped[0]][location_jumped[1]]
+            peg_to_jump_to_index_map[peg_to_jump] = i
+            possible_pegs_to_jump.add(peg_to_jump)
+
+        # Print board, highlighting possible pegs to be jumped over
+        self.b.print_board(possible_pegs_to_jump, "GREEN")
+
+        # Inifinte loop to re-prompt until input is valid
+        while True:
+
+            # Ask user to select the peg to be jumped over
+            self.f.center(f"* {peg} can jump over the highlighted pegs *")
+            user_input = self.f.prompt(f"Choose the peg to jump over")
+
+            # Handle case of valid selection
+            if user_input in possible_pegs_to_jump:
+
+                # Return the jump corresponding to the chosen peg to be jumped
+                possible_moves = self.b.moves_map[peg]
+                return possible_moves[peg_to_jump_to_index_map[user_input]]
+
+            # Notify user of invalid input
+            self.invalid()
+
+    def revert_state(self) -> None:
+        """Undo the last move by reverting the board to its previous state"""
+
+        # Handle case of no previous states
+        if not self.previous_board_states:
             print()
-            self.f.center("* Unable to go back *")
-            print()
+            self.f.center("* Unable to go back *", end="\n\n")
             return
-        # pop prior state and update board and moves, then show updated board
-        self.b.board, self.moves = self.prev_states.pop()
-        self.b.show()
+
+        # Pop most recent board state and make it the current board
+        self.b = self.previous_board_states.pop()
+
+    def show_hint(self) -> None:
+        """
+        Determine the optimal outcome of the game given the current state and
+        highlight the peg(s) that need to be moved next for the optimal outcome
+        """
+        pass
+
+    def invalid(self) -> None:
+        """Print message notifying the user of an invalid selection"""
+        self.f.center("* Invalid selection. Try again. *", end="\n\n")
+        time.sleep(0.75)
+
+    def save_state(self) -> None:
+        """Make a deep copy of the board and add it to previous_board_states"""
+        board_copy: Board = copy.deepcopy(self.b)
+        self.previous_board_states.append(board_copy)
 
     @space
-    def game_over(self):
-        """Handle the end of the game and display results"""
-        self.f.center(" GAME OVER ", s=["BOLD"], fill="*")
-        print()
-        left = self.b.pegs_left()
-        if left == 1:
+    def game_over(self) -> int:
+        """Manage end of game and return points earned this game"""
+
+        # Notify user that game is over
+        self.f.center(" GAME OVER ", ["BOLD"], "*", end="\n\n")
+
+        # Get number of pegs left on board and handle each case
+        num_pegs = self.b.number_of_pegs()
+
+        if num_pegs == 1:
             points = 50
             result = "1 peg left. Wow! GENIUS!! 50 points!!"
-        elif left == 2:
+        elif num_pegs == 2:
             points = 25
             result = "2 pegs left. Above average! 25 points!"
-        elif left == 3:
+        elif num_pegs == 3:
             points = 10
             result = "3 pegs left. Just so-so. 10 points."
         else:
             points = 0
-            result = f"{left} pegs left. Not good. 0 points."
-        self.f.center(f"{result}", s=["GREEN"])
-        print()
-        print(("*" * self.f.w))
+            result = f"{num_pegs} pegs left. Not good. 0 points."
+
+        # Notify user of result
+        self.f.center(result, ["GREEN"], end="\n\n")
+        print(("*" * self.f.width))
+
+        # Pause before returning number of points earned this game
         time.sleep(self.pause)
         return points
-
-    @space
-    def play(self):
-        """Drive game sequence"""
-        self.header()
-        self.b.show()
-        self.remove_one_peg()
-        while True:
-            self.moves = self.b.get_moves()
-            # game is over if no possible moves
-            if len(self.moves) == 0:
-                self.b.show()
-                return self.game_over()
-            self.b.show()
-            pick = self.pick_peg()
-            jumps = self.moves[pick]
-            if len(jumps) == 1:
-                jump = jumps[0]
-            else:
-                jumpees = set([jump[0] for jump in jumps])
-                self.b.show(jumpees, color="GREEN")
-                jump = self.pick_jump(jumps)
-            self.save_state()
-            self.make_jump(pick, jump)

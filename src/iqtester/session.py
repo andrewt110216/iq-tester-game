@@ -1,3 +1,4 @@
+from typing import *
 import time
 from .formatter import Formatter, space
 from .game import Game
@@ -6,179 +7,242 @@ from .game import Game
 class Session:
     """API for a session of gameplay of IQ Tester"""
 
-    def __init__(self):
+    def __init__(self) -> None:
+
+        # Create a Formatter object to manage formats of statements to stdout
         self.f = Formatter(78)
+
+        # Initialize session statistics
+        self.played = 0
         self.total_score = 0
         self.board_size = 5
-        self.game = None
-        self.played = 0
+
+        # Initialize session settings
         self.keep_playing = True
         self.pause = 1.25
 
-    def get_average(self):
+        # Initialize the attribute to store instances of Game
+        self.game: Optional[Game] = None
+
+    def get_average(self) -> float:
+        """Return the average points per game for this session"""
         if self.played == 0:
             return round(0, 1)
         return round(self.total_score / self.played, 1)
 
-    @space
-    def header(self):
-        self.f.center('', fill='*', s=["BOLD", "BLUE"])
-        self.f.center(' WELCOME TO IQ TESTER ', fill='*', s=["BOLD"])
-        self.f.center('', fill='*', s=["BOLD", "BLUE"])
+    def start(self) -> None:
+        """Initiate and manage a new session of games"""
 
-    @space
-    def instructions(self):
-        self.f.center("Start with any one hole empty.")
-        self.f.center("As you jump the pegs remove them from the board.")
-        self.f.center("Try to leave only one peg. See how you rate!.")
+        # Display package header and playing instructions
+        self.print_new_session_header()
+        self.print_instructions()
+
+        # Keep playing until user elects to quit
+        while self.keep_playing:
+
+            # Display main menu and prompt user to make a selection
+            self.main_menu()
+            main_choice = self.menu_selection()
+
+            # Handle selection to start new game
+            if main_choice == "":
+
+                # Instantiate a new Game instance
+                self.game = Game(self.f, self.board_size, self.pause)
+
+                # Launch game play and get back the number of points earned
+                game_score = self.game.play()
+
+                # Update session statistics
+                self.total_score += game_score
+                self.played += 1
+
+            # Handle selection to navigate to settings menu
+            elif main_choice == "s":
+
+                # Display settings menu and prompt user to make a selection
+                self.settings_menu()
+                setting_choice = self.menu_selection()
+
+                # Handle selection to update board size
+                if setting_choice == "s":
+                    self.update_board_size()
+                    time.sleep(0.8)
+
+                # Handle selection to change pause time
+                elif setting_choice == "p":
+                    self.update_pause()
+                    time.sleep(0.8)
+
+                # Pause then return to main menu
+                self.f.center("Returning to Main Menu...")
+                time.sleep(1)
+
+            # Handle any other selection, treating as a choice to quit
+            else:
+                self.quit()
 
     @space
     def main_menu(self):
         """Display the main menu including statistics and gameplay options"""
-        # menu width
-        w = 40
 
-        # menu header
-        self.f.center('', fill='-', in_w=w - 2)
-        self.f.center("", in_w=w, in_b='|')
-        self.f.center("MAIN MENU", ['BOLD'], in_w=w, in_b='|')
-        self.f.center("", in_w=w, in_b='|')
+        # Set width of menu
+        width = 40
 
-        # game statistics
-        # format total and average scores for display
-        sc = f"{self.total_score:,}"
+        # Top of Menu box and header
+        self.f.center("", [], '-', width - 2)
+        self.f.center("", [], " ", width, '|')
+        self.f.center("MAIN MENU", ['BOLD'], " ", width, '|')
+        self.f.center("", [], " ", width, '|')
+
+        # Game Statistics
+        # Format total and average scores for display
+        score_str = f"{self.total_score:,}"
         average = self.get_average()
         if average % 1 == 0:
             average = int(average)
-        avg = f"{average:,}"
+        avg_str = f"{average:,}"
 
-        # assemble strings for each statistic, aligned left and right
-        l, r = 18, max(6, len(sc), len(avg)) + 1
+        # Assemble strings for each statistic, aligned left and right
+        l, r = 18, max(6, len(score_str), len(avg_str)) + 1
         games_played = "GAMES PLAYED: ".ljust(l) + str(self.played).rjust(r)
-        total_score = "YOUR TOTAL SCORE: ".ljust(l) + sc.rjust(r)
-        average_score = "AVERAGE SCORE: ".ljust(l) + avg.rjust(r)
+        total_score = "YOUR TOTAL SCORE: ".ljust(l) + score_str.rjust(r)
+        average_score = "AVERAGE SCORE: ".ljust(l) + avg_str.rjust(r)
 
-        # display each menu row with formatting
+        # Display each menu row with formatting
         formats = ['BOLD', 'GREEN']
-        self.f.center(games_played, formats, in_w=w, in_b='|')
-        self.f.center(total_score, formats, in_w=w, in_b='|')
-        self.f.center(average_score, formats, in_w=w, in_b='|')
-        self.f.center("", in_w=w, in_b='|')
+        self.f.center(games_played, formats, " ", width, '|')
+        self.f.center(total_score, formats, " ", width, '|')
+        self.f.center(average_score, formats, " ", width, '|')
+        self.f.center("", [], " ", width, '|')
 
-        # gameplay options
+        # Gameplay options
         formats = ['BOLD', 'RED']
         new_game_row = "New Game".ljust(l, '.') + "[ENTER]".rjust(r, '.')
         settings_row = "Settings".ljust(l, '.') + "[s]".rjust(r, '.')
         quit_row = "Quit".ljust(l, '.') + "[q]".rjust(r, '.')
-        self.f.center(new_game_row, formats, in_w=w, in_b='|')
-        self.f.center(settings_row, formats, in_w=w, in_b='|')
-        self.f.center(quit_row, formats, in_w=w, in_b='|')
+        self.f.center(new_game_row, formats, " ", width, '|')
+        self.f.center(settings_row, formats, " ", width, '|')
+        self.f.center(quit_row, formats, " ", width, '|')
 
-        # bottom border of menu
-        self.f.center("", in_w=w, in_b='|')
-        self.f.center('', fill='-', in_w=w - 2)
+        # Bottom of Menu box
+        self.f.center("", [], " ", width, '|')
+        self.f.center("", [], '-', width - 2)
 
-    def settings_menu(self):
-        """Allow user to change certain gameplay settings"""
+    @space
+    def settings_menu(self) -> None:
+        """Display settings menu and allow user to change settings"""
+
         # menu width
-        w = 40
+        width = 40
         l, r = 18, 4
 
-        # menu header
-        self.f.center('', fill='-', in_w=w - 2)
-        self.f.center("", in_w=w, in_b='|')
-        self.f.center("SETTINGS MENU", ['BOLD'], in_w=w, in_b='|')
-        self.f.center("", in_w=w, in_b='|')
+        # Top of Menu box and header
+        self.f.center("", [], '-', width - 2)
+        self.f.center("", [], " ", width, '|')
+        self.f.center("SETTINGS MENU", ['BOLD'], " ", width, '|')
+        self.f.center("", [], " ", width, '|')
 
-        # menu options
+        # Menu options
         n = self.board_size
         size_row = f"Board Size ({n})".ljust(l, '.') + "[s]".rjust(r, '.')
         p = self.pause
         pause_row = f"Pause Time ({p})".ljust(l, '.') + "[p]".rjust(r, '.')
         return_row = "Return".ljust(l, '.') + "[r]".rjust(r, '.')
-        self.f.center(size_row, in_w=w, in_b='|')
-        self.f.center(pause_row, in_w=w, in_b='|')
-        self.f.center(return_row, in_w=w, in_b='|')
+        self.f.center(size_row, [], " ", width, '|')
+        self.f.center(pause_row, [], " ", width, '|')
+        self.f.center(return_row, [], " ", width, '|')
 
-        # bottom border of menu
-        self.f.center("", in_w=w, in_b='|')
-        self.f.center('', fill='-', in_w=w - 2)
+        # Bottom of Menu box
+        self.f.center("", [], " ", width, '|')
+        self.f.center("", [], '-', width - 2)
 
     @space
-    def update_board_size(self):
+    def update_board_size(self) -> None:
+        """Prompt user to update the default number of rows for a new board"""
+
         low = 4  # minimum board size (3 or less doesn't work)
         high = 6  # maximum board size (7 or more uses > 26 pegs)
+
+        # Infinite loop to re-prompt until input is valid
         while True:
-            n = self.f.prompt(f"Enter desired board size ({low} to {high}):")
+
+            # Prompt user for desired board size
+            prompt = f"Enter desired board size ({low} to {high}):"
+            user_input = self.f.prompt(prompt)
+
+            # Validate user input
             try:
-                n = int(n)
-                if low <= n <= high:
+                new_size = int(user_input)
+                if low <= new_size <= high:
                     break
+
+            # Handle nonnumeric user input
             except (TypeError, ValueError, NameError):
                 self.f.center("Board size must be an integer. Try again.")
 
+        # Update board size setting
         print()
-        self.f.center(f"Updating board size to {n}...")
-        self.board_size = n
+        self.f.center(f"Updating board size to {new_size}...")
+        self.board_size = new_size
 
     @space
-    def update_pause(self):
+    def update_pause(self) -> None:
+        """Prompt user to update the default pause time after game over"""
+
+        # Set bounds
         low = 0
         high = 3
+
+        # Infinite loop to re-prompt until input is valid
         while True:
+
+            # Prompt user for desired pause time
             prompt = f"Enter the desired pause ({low} to {high} seconds):"
-            p = self.f.prompt(prompt)
+            user_input = self.f.prompt(prompt)
+
+            # Validate user input
             try:
-                p = float(p)
-                if low <= p <= high:
+                new_pause = float(user_input)
+                if low <= new_pause <= high:
                     break
+
+            # Handle nonnumeric user input
             except (TypeError, ValueError, NameError):
                 self.f.center("Pause must be a float or int. Try again.")
 
+        # Update pause setting
         print()
-        self.f.center(f"Pause has been updated to {p:.2f} seconds...")
-        self.pause = p
+        self.f.center(f"Pause has been updated to {new_pause:.2f} seconds...")
+        self.pause = new_pause
 
     @space
-    def footer(self):
+    def print_new_session_header(self) -> None:
+        """Print header rows for a new session"""
+        self.f.center('', ["BOLD", "BLUE"], '*')
+        self.f.center(' WELCOME TO IQ TESTER ', ["BOLD"], '*')
+        self.f.center('', ["BOLD", "BLUE"], '*')
+
+    def print_instructions(self) -> None:
+        """Print instructions for the game"""
+        self.f.center("Start with any one hole empty.")
+        self.f.center("As you jump the pegs remove them from the board.")
+        self.f.center("Try to leave only one peg. See how you rate!")
+
+    @space
+    def footer(self) -> None:
+        """Print footer rows for a session"""
         self.f.center("For even more fun compete with someone. Lots of luck!")
         self.f.center("Copyright (C) 1975 Venture MFG. Co., INC. U.S.A.")
         self.f.center("Python package `iqtester` by Andrew Tracey, 2022.")
         self.f.center("Follow me: https://www.github.com/andrewt110216")
 
-    @space
-    def menu_selection(self):
+    def menu_selection(self) -> str:
         """Prompt user to select menu option and return lowercased choice"""
         return self.f.prompt("Select a menu option").lower()
 
-    def quit(self):
+    def quit(self) -> None:
         """Handle user selection to quit playing"""
-        self.f.center("Thanks for playing!", s=['BOLD'])
+        self.f.center("Thanks for playing!", ['BOLD'])
         self.footer()
         self.keep_playing = False
-
-    def start(self):
-        """Drive gameplay"""
-        self.header()
-        self.instructions()
-        while self.keep_playing:
-            self.main_menu()
-            main_choice = self.menu_selection()
-            if main_choice == "":
-                self.game = Game(self.f, self.board_size, self.pause)
-                game_score = self.game.play()
-                self.total_score += game_score
-                self.played += 1
-            elif main_choice == "s":
-                self.settings_menu()
-                setting_choice = self.menu_selection()
-                if setting_choice == "s":
-                    self.update_board_size()
-                    time.sleep(0.8)
-                elif setting_choice == "p":
-                    self.update_pause()
-                    time.sleep(0.8)
-                self.f.center("Returning to Main Menu...")
-                time.sleep(1)
-            else:
-                self.quit()
