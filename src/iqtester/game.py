@@ -1,4 +1,4 @@
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 import time
 from .formatter import space, Formatter
 from .board import Board, BoardLocation, Jump, Move, Peg
@@ -32,6 +32,13 @@ class Game:
         # Move object (Peg, Jump), the Peg that was jumped, and the original
         # location of the jumping peg
         self.moves_taken: List[Tuple[Move, Peg, BoardLocation]] = []
+
+        # Initialize attributes of the optimal solution (not yet known)
+        self.optimal_result: Optional[int] = None
+        self.optimal_moves: Optional[List[Move]] = None
+
+        # Pointer to travere list optimal moves if user continues to make them
+        self.optimal_moves_idx = 0
 
     def play(self) -> int:
         """Initiate and handle the game logic"""
@@ -69,15 +76,8 @@ class Game:
             if len(self.b.moves_map[peg]) > 1:
                 jump = self.choose_jump_for_peg(peg)
 
-            # Save peg's current location and peg to be jumped for tracking
-            peg_jumped = self.b.board[jump[0][0]][jump[0][1]]
-            jump_from = self.b.peg_locations_map[peg]
-
-            # Make the move chosen by the user
-            self.b.make_move(peg, jump)
-
-            # Append the details of this move to moves_taken
-            self.moves_taken.append(((peg, jump), peg_jumped, jump_from))
+            # Make the move
+            self.make_move(peg, jump)
 
     @space
     def print_new_game_header(self) -> None:
@@ -188,6 +188,43 @@ class Game:
             # Notify user of invalid input
             self.invalid()
 
+    def make_move(self, peg: Peg, jump: Jump) -> None:
+        """
+        Handle making a move and updating applicable data structures
+
+        Parameters
+        ----------
+        peg: Peg
+            The peg to make a jump
+        jump : Jump
+            The jump that peg is to make
+        """
+
+        # Save peg's current location and peg to be jumped for tracking
+        peg_jumped = self.b.board[jump[0][0]][jump[0][1]]
+        jump_from = self.b.peg_locations_map[peg]
+
+        # Manage optimal solution if one has been saved
+        if self.optimal_moves:
+
+            # Case: user is making next optimal move
+            if (peg, jump) == self.optimal_moves[self.optimal_moves_idx]:
+
+                # Advance pointer for optimal_moves list
+                self.optimal_moves_idx += 1
+
+            # Case: user is not making next optimal move
+            else:
+
+                # The optimal solution is no longer applicable so clear it
+                self.clear_optimal_solution()
+
+        # Make the move chosen by the user
+        self.b.make_move(peg, jump)
+
+        # Append the details of this move to moves_taken
+        self.moves_taken.append(((peg, jump), peg_jumped, jump_from))
+
     def undo_move(self) -> None:
         """Reverse the last move taken and print the updated board"""
 
@@ -207,69 +244,75 @@ class Game:
         # Undo the move
         self.b.undo_move(move, peg_jumped, jump_from)
 
+        # Clear any optimal solution that was stored
+        self.clear_optimal_solution()
+
         # Print updated board
         self.b.print_board()
-
-    def invalid(self) -> None:
-        """Print message notifying the user of an invalid selection"""
-        self.f.center("* Invalid selection. Try again. *", end="\n\n")
-        time.sleep(self.msg_pause)
 
     def show_hint(self) -> None:
         """Get optimal solution for current board and display to user"""
 
-        # Warn user about possible wait time
-        num_pegs = self.b.number_of_pegs()
+        # Handle case where there is not already an applicable solution saved
+        if not self.optimal_moves:
 
-        # Handle case of too many pegs to solve in under a minute
-        MAX = 13
-        if num_pegs > MAX:
-            msg = f"* Hints are disabled for over {MAX} pegs due to run time *"
-            self.f.center(msg)
-            time.sleep(self.msg_pause)
-            self.b.print_board()
-            return
+            # Get current number of pegs on the board to warn about run time
+            num_pegs = self.b.number_of_pegs()
 
-        # Handle case of long estimated time to solve
-        elif num_pegs > 11:
-
-            # Map number of remaining pegs to estimated time to solve
-            time_estimates = {
-                13: 40,
-                12: 10,
-                11: 3,
-            }
-
-            seconds = time_estimates[num_pegs]
-            msg = f"* It may take up to {seconds} seconds to calculate " + \
-                  f"the optimal solution for {num_pegs} pegs *"
-            self.f.center(msg, ["RED"])
-            key = self.f.prompt("Input 'x' to cancel or any key to continue")
-            if key.lower() == 'x':
+            # Handle case of too many pegs to solve in under a minute
+            MAX = 13
+            if num_pegs > MAX:
+                msg = f"* Hints are disabled for over {MAX} pegs *"
+                self.f.center(msg)
+                time.sleep(self.msg_pause)
                 self.b.print_board()
                 return
 
-        # Request optimal solution from board instance and unpack
-        solution: Tuple[int, List[Move]] = self.b.solve()
-        opt_res: int = solution[0]
-        opt_moves: List[Move] = solution[1]
+            # Handle case of long estimated time to solve
+            elif num_pegs > 11:
 
-        # Extract first move details from optimal moves
-        first_move: Move = opt_moves[0]
-        peg: Peg = first_move[0]
-        jump: Jump = first_move[1]
+                # Map number of remaining pegs to estimated time to solve
+                time_estimates = {
+                    13: 40,
+                    12: 10,
+                    11: 3,
+                }
+
+                seconds = time_estimates[num_pegs]
+                msg = f"* It may take up to {seconds} seconds to calculate" + \
+                      f" the optimal solution for {num_pegs} pegs *"
+                self.f.center(msg, ["RED"])
+                key = self.f.prompt(
+                    "Type 'x' to cancel hint request or any key to continue"
+                )
+                if key.lower() == 'x':
+                    self.b.print_board()
+                    return
+
+            # Request and save optimal solution from board instance and unpack
+            solution: Tuple[int, List[Move]] = self.b.solve()
+            self.optimal_result = solution[0]
+            self.optimal_moves = solution[1]
+            self.optimal_moves_idx = 0
+
+        # Next move is first in list of optimal moves
+        move: Move = self.optimal_moves[self.optimal_moves_idx]
+
+        # Unpack details to display hint to user
+        peg: Peg = move[0]
+        jump: Jump = move[1]
         peg_jumped: Peg = self.b.board[jump[0][0]][jump[0][1]]
 
         # Display board and provide hint to user
         self.b.print_board({peg, peg_jumped}, "GREEN")
-        if opt_res == 1:
+        if self.optimal_result == 1:
             self.f.center(
                 "You still have a chance to leave just 1 peg!",
                 ["GREEN"],
             )
         else:
             self.f.center(
-                f"The best you can do is leave {opt_res} pegs.",
+                f"The best you can do is leave {self.optimal_result} pegs.",
                 ["GREEN"],
             )
         self.f.center(
@@ -277,6 +320,17 @@ class Game:
             ["GREEN"],
             end="\n\n"
         )
+
+    def clear_optimal_solution(self) -> None:
+        """Reset the attributes of an optimal solution for the game"""
+        self.optimal_result = None
+        self.optimal_moves = None
+        self.optimal_moves_idx = 0
+
+    def invalid(self) -> None:
+        """Print message notifying the user of an invalid selection"""
+        self.f.center("* Invalid selection. Try again. *", end="\n\n")
+        time.sleep(self.msg_pause)
 
     @space
     def game_over(self) -> int:
