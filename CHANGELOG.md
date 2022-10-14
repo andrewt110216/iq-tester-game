@@ -1,5 +1,12 @@
 # Changelog
 
+<!-- For Next Release -->
+## v0.2.1 (TBD)
+
+### Feature
+
+- TBD
+
 ## v0.2.0 (10/14/2022)
 
 ### Feature

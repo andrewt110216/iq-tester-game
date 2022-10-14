@@ -1,6 +1,6 @@
 # About
 <!-- UPDATE VERSION IN BADGE MANUALLY -->
-![PyPI Version](https://img.shields.io/badge/pypi-v0.2.0-orange)
+![PyPI Version](https://img.shields.io/badge/pypi-v0.2.1-orange)
 ![Build](https://img.shields.io/github/workflow/status/andrewt110216/iq-tester-game/Tests?style=plastic)
 
 `iqtester` is a simple command-line version of the classic game "IQ Tester"
@@ -38,19 +38,26 @@ python3 -m iqtester
 
 # Demos
 
-## Gameplay
+## Standard Game
 
-*A simple (albeit not very successful!) game looks like this.*
-
-*As the game begins, focus on the bottom of the screen to see the current board.*
+*A standard game looks like this (current board is on the bottom):*
 
 <img src="demo-gifs/play.gif">
 
 <br>
 
-## Feature: Undo a Jump (Go Back)
+## Ask for a Hint
 
-*If you make a mistake, or see a better move, use '.' to undo your last move!*
+*Request a hint using '>' to see the move that would lead to the best possible outcome*
+
+<img src="demo-gifs/hint.gif">
+
+<br>
+
+
+## Undo a Move
+
+*Undo the last move using '.' if you made a mistake or found a better move*
 
 <img src="demo-gifs/back.gif">
 
@@ -58,9 +65,7 @@ python3 -m iqtester
 
 ## Multiple Pegs to Jump
 
-*If you pick a peg that has multiple potential jumps, the pegs to jump will be highlighted.*
-
-*Choose the peg you'd like to jump over!*
+*To move a peg that has multiple possible jumps, choose the peg to move then choose the peg to jump over*
 
 <img src="demo-gifs/multiple-jumps.gif">
 
@@ -68,18 +73,8 @@ python3 -m iqtester
 
 ## Change Board Size
 
-*The size of the board can be changed to have 4, 5, or 6 rows.*
+*Change the board size to have 4, 5, or 6 rows*
 
 <img src="demo-gifs/increase-size.gif">
-
-<br>
-
-## Ask for a Hint
-
-*Request a hint using '>' to see the move that leads to the best possible outcome.*
-
-*This feature is only available with 13 or fewer pegs.*
-
-<img src="demo-gifs/hint.gif">
 
 <br>
