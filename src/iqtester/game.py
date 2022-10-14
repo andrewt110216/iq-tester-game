@@ -1,6 +1,5 @@
 from typing import Dict, List, Set, Tuple
 import time
-import copy
 from .formatter import space, Formatter
 from .board import Board, BoardLocation, Jump, Move, Peg
 
