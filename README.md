@@ -50,7 +50,7 @@ python3 -m iqtester
 
 ## Feature: Undo a Jump (Go Back)
 
-*If you make a mistake, or see a better move, use a period to undo your last move!*
+*If you make a mistake, or see a better move, use '.' to undo your last move!*
 
 <img src="demo-gifs/back.gif">
 
@@ -58,7 +58,7 @@ python3 -m iqtester
 
 ## Multiple Pegs to Jump
 
-*If you pick a peg that has multiple potential jumps, the possibilities will be highlighted.*
+*If you pick a peg that has multiple potential jumps, the pegs to jump will be highlighted.*
 
 *Choose the peg you'd like to jump over!*
 
@@ -66,14 +66,20 @@ python3 -m iqtester
 
 <br>
 
-## Need a Challenge?!
+## Change Board Size
 
-*Maybe you're a **GENIUS** and `iqtester` tells you so over and over again. Kind of like me (I mean look at that score).*
-
-*Once you get over the flattery and are ready to be challenged again, you can make the board size larger.*
-
-*That ought to keep you entertained long enough!*
+*The size of the board can be changed to have 4, 5, or 6 rows.*
 
 <img src="demo-gifs/increase-size.gif">
+
+<br>
+
+## Ask for a Hint
+
+*Request a hint using '>' to see the move that leads to the best possible outcome.*
+
+*This feature is only available with 13 or fewer pegs.*
+
+<img src="demo-gifs/hint.gif">
 
 <br>
