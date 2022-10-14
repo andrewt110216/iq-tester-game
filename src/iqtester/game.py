@@ -259,8 +259,8 @@ class Game:
         # Display board and provide hint to user
         self.b.print_board({peg, peg_jumped}, "GREEN")
         if opt_res == 1:
-             self.f.center(
-                f"You still have a chance to leave just 1 peg!",
+            self.f.center(
+                "You still have a chance to leave just 1 peg!",
                 ["GREEN"],
             )
         else:
