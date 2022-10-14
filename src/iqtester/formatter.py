@@ -31,7 +31,7 @@ class Formatter:
         "END": ("\033[0m", 4),
     }
 
-    def __init__(self, width: int) -> None:
+    def __init__(self, width: int = 78) -> None:
 
         # The max width for all lines printed
         self.width = width
@@ -101,7 +101,7 @@ class Formatter:
         # Print formatted message with custom end
         print(formatted_msg, end=end)
 
-    def apply_formatting(self, msg: str, styles = ["BOLD"]) -> Tuple[str, int]:
+    def apply_formatting(self, msg: str, styles=["BOLD"]) -> Tuple[str, int]:
         """
         Apply multiple styles to a msg and return the formatted string
 
@@ -148,7 +148,7 @@ class Formatter:
         """Return user-input with center-aligned user-prompt"""
 
         # Print message with formatting and no new line character
-        self.center(f">> {msg} >>", ["RED"], " ", 0, "", -1, "")
+        self.center(f">> {msg} >>", ["BLUE"], " ", 0, "", -1, "")
 
         # Request input with cursor immediately following printed message
         return input(" ")

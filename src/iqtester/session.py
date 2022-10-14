@@ -1,4 +1,4 @@
-from typing import *
+from typing import Optional
 import time
 from .formatter import Formatter, space
 from .game import Game
@@ -20,6 +20,7 @@ class Session:
         # Initialize session settings
         self.keep_playing = True
         self.pause = 1.25
+        self.msg_pause = 0.75
 
         # Initialize the attribute to store instances of Game
         self.game: Optional[Game] = None
@@ -53,6 +54,10 @@ class Session:
                 # Launch game play and get back the number of points earned
                 game_score = self.game.play()
 
+                # Handle user selection to quit mid-game
+                if game_score == -1:
+                    continue
+
                 # Update session statistics
                 self.total_score += game_score
                 self.played += 1
@@ -67,23 +72,23 @@ class Session:
                 # Handle selection to update board size
                 if setting_choice == "s":
                     self.update_board_size()
-                    time.sleep(0.8)
+                    time.sleep(self.msg_pause)
 
                 # Handle selection to change pause time
                 elif setting_choice == "p":
                     self.update_pause()
-                    time.sleep(0.8)
+                    time.sleep(self.msg_pause)
 
                 # Pause then return to main menu
                 self.f.center("Returning to Main Menu...")
-                time.sleep(1)
+                time.sleep(self.msg_pause)
 
             # Handle any other selection, treating as a choice to quit
             else:
                 self.quit()
 
     @space
-    def main_menu(self):
+    def main_menu(self) -> None:
         """Display the main menu including statistics and gameplay options"""
 
         # Set width of menu
@@ -157,7 +162,6 @@ class Session:
         self.f.center("", [], " ", width, '|')
         self.f.center("", [], '-', width - 2)
 
-    @space
     def update_board_size(self) -> None:
         """Prompt user to update the default number of rows for a new board"""
 
@@ -182,11 +186,9 @@ class Session:
                 self.f.center("Board size must be an integer. Try again.")
 
         # Update board size setting
-        print()
-        self.f.center(f"Updating board size to {new_size}...")
+        self.f.center(f"Updating board size to {new_size}...", end="\n\n")
         self.board_size = new_size
 
-    @space
     def update_pause(self) -> None:
         """Prompt user to update the default pause time after game over"""
 
@@ -212,8 +214,7 @@ class Session:
                 self.f.center("Pause must be a float or int. Try again.")
 
         # Update pause setting
-        print()
-        self.f.center(f"Pause has been updated to {new_pause:.2f} seconds...")
+        self.f.center(f"Updating pause to {new_pause:.2f}s...", end="\n\n")
         self.pause = new_pause
 
     @space

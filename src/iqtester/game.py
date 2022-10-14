@@ -1,19 +1,25 @@
-from typing import Dict, List, Sequence, Set
+from typing import Dict, List, Set, Tuple
 import time
 import copy
 from .formatter import space, Formatter
-from .board import Board, BoardLocation, Jump, MovesMap, Peg
+from .board import Board, BoardLocation, Jump, Move, Peg
 
 
 class Game:
     """Manager for a game of IQ Tester"""
 
-    def __init__(self, f: Formatter, size: int = 5, pause: float = 2) -> None:
+    def __init__(
+        self,
+        f: Formatter,
+        size: int = 5,
+        pause: float = 2,
+        msg_pause: float = 0.75
+    ) -> None:
 
         # The Formatter instance used to format print statements
         self.f = f
 
-        # The game board (an instance of the Board class)
+        # The game board
         self.b = Board(size, self.f)
 
         # Store a list of previous states of the board, with the most recent
@@ -22,6 +28,10 @@ class Game:
 
         # Setting for length (in seconds) of pause after game over
         self.pause = pause
+
+        # Setting for length (in seconds) of pause when certain messages are
+        # displayed, like invalid selection or updated settings
+        self.msg_pause = msg_pause
 
     def play(self) -> int:
         """Initiate and handle the game logic"""
@@ -48,6 +58,10 @@ class Game:
             # Prompt user to pick a peg to move
             peg: Peg = self.choose_peg_to_move()
 
+            # Handle user selection to quit and return to session
+            if peg == '!':
+                return -1
+
             # Handle case of only a single possible jump for peg
             jump: Jump
             if len(self.b.moves_map[peg]) == 1:
@@ -71,7 +85,6 @@ class Game:
         self.f.center(" START NEW GAME ", fill_char="*", end="\n\n")
         self.f.center("Each letter in the board represents a peg in a hole.")
 
-    @space
     def remove_one_peg(self) -> None:
         """Prompt user to choose one peg to remove from the board to start"""
 
@@ -80,7 +93,7 @@ class Game:
 
             # Prompt user to choose a peg
             self.f.center("The game begins with one hole on the board empty.")
-            user_input = self.f.prompt("Choose a peg to remove")
+            user_input = self.f.prompt("Choose a peg to remove to start")
 
             # Handle case of valid selection
             if user_input in self.b.peg_locations_map:
@@ -97,10 +110,13 @@ class Game:
         while True:
 
             # Print list of special options and prompt user
-            self.f.center("Special Options: Go Back ('.') | Hint ('>')")
+            self.f.center(
+                "Options: Undo Last Move ('.') | Hint ('>') | Quit Game ('!')",
+                ["RED"],
+            )
             user_input = self.f.prompt(
-                "Choose a peg to move (or a special option)"
-                )
+                "Input an option or choose a peg to move"
+            )
 
             # Handle special options
             if user_input == '.':
@@ -108,6 +124,8 @@ class Game:
                 self.b.print_board()
             elif user_input == '>':
                 self.show_hint()
+            elif user_input == '!':
+                return user_input
 
             # Handle case of valid peg selection with possible moves
             elif (
@@ -128,7 +146,11 @@ class Game:
 
                 # Print the board, highlighting the pegs that can be moved
                 self.b.print_board(pegs_that_can_move)
-                self.f.center("* Only highlighted pegs can move *")
+                self.f.center(
+                    "* Only highlighted pegs can move *",
+                    ["RED"],
+                    end="\n\n"
+                )
 
     @space
     def choose_jump_for_peg(self, peg: Peg) -> Jump:
@@ -148,14 +170,14 @@ class Game:
             possible_pegs_to_jump.add(peg_to_jump)
 
         # Print board, highlighting possible pegs to be jumped over
-        self.b.print_board(possible_pegs_to_jump, "GREEN")
+        self.b.print_board(possible_pegs_to_jump, "BOLD")
 
         # Inifinte loop to re-prompt until input is valid
         while True:
 
             # Ask user to select the peg to be jumped over
-            self.f.center(f"* {peg} can jump over the highlighted pegs *")
-            user_input = self.f.prompt(f"Choose the peg to jump over")
+            self.f.center(f"* {peg} can jump over the bold pegs *")
+            user_input = self.f.prompt("Choose the peg to jump over")
 
             # Handle case of valid selection
             if user_input in possible_pegs_to_jump:
@@ -179,22 +201,78 @@ class Game:
         # Pop most recent board state and make it the current board
         self.b = self.previous_board_states.pop()
 
-    def show_hint(self) -> None:
-        """
-        Determine the optimal outcome of the game given the current state and
-        highlight the peg(s) that need to be moved next for the optimal outcome
-        """
-        pass
-
     def invalid(self) -> None:
         """Print message notifying the user of an invalid selection"""
         self.f.center("* Invalid selection. Try again. *", end="\n\n")
-        time.sleep(0.75)
+        time.sleep(self.msg_pause)
 
     def save_state(self) -> None:
         """Make a deep copy of the board and add it to previous_board_states"""
         board_copy: Board = copy.deepcopy(self.b)
         self.previous_board_states.append(board_copy)
+
+    def show_hint(self) -> None:
+        """Get optimal solution for current board and display to user"""
+
+        # Warn user about possible wait time
+        num_pegs = self.b.number_of_pegs()
+
+        # Handle case of too many pegs to solve in under a minute
+        MAX = 13
+        if num_pegs > MAX:
+            msg = f"* Hints are disabled for over {MAX} pegs due to run time *"
+            self.f.center(msg)
+            time.sleep(self.msg_pause)
+            self.b.print_board()
+            return
+
+        # Handle case of long estimated time to solve
+        elif num_pegs > 11:
+
+            # Map number of remaining pegs to estimated time to solve
+            time_estimates = {
+                13: 40,
+                12: 10,
+                11: 3,
+            }
+
+            seconds = time_estimates[num_pegs]
+            msg = f"* It may take up to {seconds} seconds to calculate " + \
+                  f"the optimal solution for {num_pegs} pegs *"
+            self.f.center(msg, ["RED"])
+            key = self.f.prompt("Input 'x' to cancel or any key to continue")
+            if key.lower() == 'x':
+                self.b.print_board()
+                return
+
+        # Request optimal solution from board instance and unpack
+        solution: Tuple[int, List[Move]] = self.b.solve()
+        opt_res: int = solution[0]
+        opt_moves: List[Move] = solution[1]
+
+        # Extract first move details from optimal moves
+        first_move: Move = opt_moves[0]
+        peg: Peg = first_move[0]
+        jump: Jump = first_move[1]
+        peg_jumped: Peg = self.b.board[jump[0][0]][jump[0][1]]
+
+        # Display board and provide hint to user
+        self.b.print_board({peg, peg_jumped}, "GREEN")
+        if opt_res == 1:
+             self.f.center(
+                f"You still have a chance to leave just 1 peg!",
+                ["GREEN"],
+            )
+        else:
+            self.f.center(
+                f"The best you can do is leave {opt_res} pegs.",
+                ["GREEN"],
+            )
+        self.f.center(
+            f"* Hint: Jump '{peg}' over '{peg_jumped}' *",
+            ["GREEN"],
+            end="\n\n"
+        )
 
     @space
     def game_over(self) -> int:
