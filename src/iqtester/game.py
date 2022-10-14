@@ -19,19 +19,20 @@ class Game:
         # The Formatter instance used to format print statements
         self.f = f
 
-        # The game board
-        self.b = Board(size, self.f)
-
-        # Store a list of previous states of the board, with the most recent
-        # state at the end of the list
-        self.previous_board_states: List[Board] = []
-
         # Setting for length (in seconds) of pause after game over
         self.pause = pause
 
         # Setting for length (in seconds) of pause when certain messages are
         # displayed, like invalid selection or updated settings
         self.msg_pause = msg_pause
+
+        # The game board
+        self.b = Board(size, self.f)
+
+        # Keep a list of moves taken during this game. For each move, store the
+        # Move object (Peg, Jump), the Peg that was jumped, and the original
+        # location of the jumping peg
+        self.moves_taken: List[Tuple[Move, Peg, BoardLocation]] = []
 
     def play(self) -> int:
         """Initiate and handle the game logic"""
@@ -51,33 +52,33 @@ class Game:
             # Print current status of board
             self.b.print_board()
 
-            # Check if game is over (i.e. no possible moves)
+            # Game is over if there are no possible moves on the board
             if not self.b.moves_map:
                 return self.game_over()
 
-            # Prompt user to pick a peg to move
-            peg: Peg = self.choose_peg_to_move()
+            # Prompt user to choose a gameplay option or pick a peg to move
+            peg: Peg = self.choose_option_or_peg()
 
             # Handle user selection to quit and return to session
             if peg == '!':
                 return -1
 
             # Handle case of only a single possible jump for peg
-            jump: Jump
-            if len(self.b.moves_map[peg]) == 1:
-                jump = self.b.moves_map[peg][0]
+            jump: Jump = self.b.moves_map[peg][0]
 
             # Handle case of multiple possible jumps for peg
-            else:
-
-                # Prompt user to choose a jump from the possible jumps
+            if len(self.b.moves_map[peg]) > 1:
                 jump = self.choose_jump_for_peg(peg)
 
-            # Save the current state of the board before executing the move
-            self.save_state()
+            # Save peg's current location and peg to be jumped for tracking
+            peg_jumped = self.b.board[jump[0][0]][jump[0][1]]
+            jump_from = self.b.peg_locations_map[peg]
 
-            # Make the move, consisting of the chosen peg and chosen jump
+            # Make the move chosen by the user
             self.b.make_move(peg, jump)
+
+            # Append the details of this move to moves_taken
+            self.moves_taken.append(((peg, jump), peg_jumped, jump_from))
 
     @space
     def print_new_game_header(self) -> None:
@@ -103,7 +104,7 @@ class Game:
             # Handle case of invalid selection
             self.invalid()
 
-    def choose_peg_to_move(self) -> Peg:
+    def choose_option_or_peg(self) -> Peg:
         """Prompt user to choose a peg to move"""
 
         # Inifinte loop to re-prompt until input is valid
@@ -120,8 +121,7 @@ class Game:
 
             # Handle special options
             if user_input == '.':
-                self.revert_state()
-                self.b.print_board()
+                self.undo_move()
             elif user_input == '>':
                 self.show_hint()
             elif user_input == '!':
@@ -189,27 +189,32 @@ class Game:
             # Notify user of invalid input
             self.invalid()
 
-    def revert_state(self) -> None:
-        """Undo the last move by reverting the board to its previous state"""
+    def undo_move(self) -> None:
+        """Reverse the last move taken and print the updated board"""
 
-        # Handle case of no previous states
-        if not self.previous_board_states:
-            print()
+        # Handle case of no previous moves taken
+        if not self.moves_taken:
             self.f.center("* Unable to go back *", end="\n\n")
+            time.sleep(self.msg_pause)
+            self.b.print_board()
             return
 
-        # Pop most recent board state and make it the current board
-        self.b = self.previous_board_states.pop()
+        # Pop last move from moves_taken and unpack details
+        move_info: Tuple[Move, Peg, BoardLocation] = self.moves_taken.pop()
+        move: Move = move_info[0]
+        peg_jumped: Peg = move_info[1]
+        jump_from: BoardLocation = move_info[2]
+
+        # Undo the move
+        self.b.undo_move(move, peg_jumped, jump_from)
+
+        # Print updated board
+        self.b.print_board()
 
     def invalid(self) -> None:
         """Print message notifying the user of an invalid selection"""
         self.f.center("* Invalid selection. Try again. *", end="\n\n")
         time.sleep(self.msg_pause)
-
-    def save_state(self) -> None:
-        """Make a deep copy of the board and add it to previous_board_states"""
-        board_copy: Board = copy.deepcopy(self.b)
-        self.previous_board_states.append(board_copy)
 
     def show_hint(self) -> None:
         """Get optimal solution for current board and display to user"""
