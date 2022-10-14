@@ -1,14 +1,16 @@
 # Changelog
 
-<!-- Next Version In Progress -->
-## v0.2.0 (TBD)
+## v0.2.0 (10/14/2022)
 
 ### Feature
 
-- Added option to ask for a **hint** for the optimal next move
-- Added option to **auto-complete** the current game with an optimal outcome
+- Added option to ask for a **hint** to solve for the optimal result and provide the next move
 - Added settings option to change the pause time after completing a game
-- Added Demo gifs to README
+
+### Fix
+
+- Improved efficiency of algorithms in Board and Game classes
+- Improved comments in source code for readability
 
 ## v0.1.1 (09/14/2022)
 
