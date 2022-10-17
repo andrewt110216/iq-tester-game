@@ -149,8 +149,8 @@ class Session:
         self.f.center("", [], " ", width, '|')
 
         # Menu options
-        n = self.board_size
-        size_row = f"Board Size ({n})".ljust(l, '.') + "[s]".rjust(r, '.')
+        s = self.board_size
+        size_row = f"Board Size ({s})".ljust(l, '.') + "[s]".rjust(r, '.')
         p = self.pause
         pause_row = f"Pause Time ({p})".ljust(l, '.') + "[p]".rjust(r, '.')
         return_row = "Return".ljust(l, '.') + "[r]".rjust(r, '.')
@@ -180,12 +180,22 @@ class Session:
                 new_size = int(user_input)
                 if low <= new_size <= high:
                     break
+                print()
+                self.f.center(
+                    f"* Board size must be 4-6 not {new_size}. Try again. *",
+                    ["RED"]
+                )
 
             # Handle nonnumeric user input
             except (TypeError, ValueError, NameError):
-                self.f.center("Board size must be an integer. Try again.")
+                print()
+                self.f.center(
+                    "* Board size must be an integer. Try again. *",
+                    ["RED"]
+                )
 
         # Update board size setting
+        print()
         self.f.center(f"Updating board size to {new_size}...", end="\n\n")
         self.board_size = new_size
 

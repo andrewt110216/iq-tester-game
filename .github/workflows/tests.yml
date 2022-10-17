@@ -45,8 +45,8 @@ jobs:
 
       # Run tests
       - name: Lint
-        run: flake8 src/
+        run: flake8 src/iqtester tests
       - name: Type Check
-        run: mypy src/
+        run: mypy src/iqtester tests
       - name: Run Tests
-        run: pytest
+        run: pytest -v

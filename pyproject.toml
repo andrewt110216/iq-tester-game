@@ -1,35 +1,55 @@
+# Using setuptools for build
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["iqtester*"]
-
+# Project details
 [project]
 name = "iqtester"
 version = "0.2.2"
 description = "A Python CLI version of the classic brain game IQ Tester"
 authors = [{ name = "Andrew Tracey", email = "act.project.alpha@gmail.com" }]
-license = { file = "LICENSE.md" }
 classifiers = [
     "Topic :: Games/Entertainment",
     "Topic :: Games/Entertainment :: Puzzle Games",
-    "Topic :: Games/Entertainment :: Board Games",
-    "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
 ]
 readme = "README.md"
+license = { file = "LICENSE.md" }
+keywords = ["iq tester", "game", "classic game"]
 requires-python = ">=3.7"
 dependencies = ['colorama']
-keywords = ["iq tester", "game", "classic game"]
 
+# Path to package source files
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["iqtester*"]
+
+# Set script to be run when `python -m iqtester` is called
 [project.scripts]
 iq-tester = "iqtester.__main__:main"
 
+# Include link to Github page on PyPI
+[project.urls]
+Homepage = "https://github.com/andrewt110216/iq-tester-game"
+
+# Optional dependencies for development
 [project.optional-dependencies]
 dev = ["pytest", "flake8", "mypy"]
 
-[project.urls]
-Homepage = "https://github.com/andrewt110216/iq-tester-game"
+# Pytest configuration
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["tests"]
+
+# Setting pythonpath allows test files to import from iqtester
+pythonpath = ["src"]
+
+# Mypy configuration
+[tool.mypy]
+python_version = "3.7"
+
+# Could not figure out how to get mypy to discover iqtester from test files
+# As a workaround, I will the errors related to missing import imports
+ignore_missing_imports = true

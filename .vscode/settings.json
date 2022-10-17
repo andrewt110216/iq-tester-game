@@ -1,4 +1,10 @@
 {
+    // Set interpreter to virtual environment
+    "python.defaultInterpreterPath": "env/bin/python",
+
+    // Automatically activate virtual environment
     "python.terminal.activateEnvInCurrentTerminal": true,
-    "python.defaultInterpreterPath": "env/bin/python"
+
+    // Allows Pylance to discover iqtester module for import in test files
+    "python.analysis.extraPaths": ["src"],
 }
