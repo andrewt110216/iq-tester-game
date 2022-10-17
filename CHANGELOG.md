@@ -1,5 +1,12 @@
 # Changelog
 
+<!-- Placeholder for next version -->
+## v0.2.2 (TBD)
+
+### Feature
+
+- TBD
+
 ## v0.2.1 (10/16/2022)
 
 ### Fix
