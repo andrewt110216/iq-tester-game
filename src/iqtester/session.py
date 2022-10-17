@@ -1,4 +1,5 @@
-from typing import Optional
+from typing import Any, Optional
+from numbers import Number
 import time
 from .formatter import Formatter, space
 from .game import Game
@@ -71,12 +72,12 @@ class Session:
 
                 # Handle selection to update board size
                 if setting_choice == "s":
-                    self.update_board_size()
+                    self.update_setting('board_size', 'Board Size', int, 4, 6)
                     time.sleep(self.msg_pause)
 
                 # Handle selection to change pause time
                 elif setting_choice == "p":
-                    self.update_pause()
+                    self.update_setting('pause', 'Pause', float, 0, 3)
                     time.sleep(self.msg_pause)
 
                 # Pause then return to main menu
@@ -162,70 +163,54 @@ class Session:
         self.f.center("", [], " ", width, '|')
         self.f.center("", [], '-', width - 2)
 
-    def update_board_size(self) -> None:
-        """Prompt user to update the default number of rows for a new board"""
+    def update_setting(
+        self,
+        name: str,
+        desc: str,
+        type: Any,
+        lower: Number,
+        upper: Number
+    ) -> None:
+        """
+        Prompt user to update a setting
 
-        low = 4  # minimum board size (3 or less doesn't work)
-        high = 6  # maximum board size (7 or more uses > 26 pegs)
+        Parameters
+        ----------
+        name : str
+            Name of attribute for the setting (e.g. 'board_size')
+        desc : str
+            Description of setting (e.g. 'Board Size')
+        type : Any
+            Type of value for setting (e.g. int)
+        lower : Number
+            Lower bound allowed as value for setting
+        upper : Number
+            Upper bound allowed as value for setting
+        """
 
-        # Infinite loop to re-prompt until input is valid
-        while True:
-
-            # Prompt user for desired board size
-            prompt = f"Enter desired board size ({low} to {high}):"
-            user_input = self.f.prompt(prompt)
-
-            # Validate user input
-            try:
-                new_size = int(user_input)
-                if low <= new_size <= high:
-                    break
-                print()
-                self.f.center(
-                    f"* Board size must be 4-6 not {new_size}. Try again. *",
-                    ["RED"]
-                )
-
-            # Handle nonnumeric user input
-            except (TypeError, ValueError, NameError):
-                print()
-                self.f.center(
-                    "* Board size must be an integer. Try again. *",
-                    ["RED"]
-                )
-
-        # Update board size setting
-        print()
-        self.f.center(f"Updating board size to {new_size}...", end="\n\n")
-        self.board_size = new_size
-
-    def update_pause(self) -> None:
-        """Prompt user to update the default pause time after game over"""
-
-        # Set bounds
-        low = 0
-        high = 3
+        # Assemble output strings
+        prompt = f"Enter desired {desc} between {lower} and {upper}:"
+        range_msg = f"{desc} must be between {lower} and {upper}"
+        type_msg = f"{desc} must of: {str(type)}"
 
         # Infinite loop to re-prompt until input is valid
         while True:
-
-            # Prompt user for desired pause time
-            prompt = f"Enter the desired pause ({low} to {high} seconds):"
             user_input = self.f.prompt(prompt)
 
-            # Validate user input
+            # Validate input
             try:
-                new_pause = float(user_input)
-                if low <= new_pause <= high:
+                user_input = type(user_input)
+                if lower <= user_input <= upper:
                     break
+                self.f.center(f"* {range_msg}. Try again. *", ["RED"])
 
-            # Handle nonnumeric user input
+            # Handle input of wrong type
             except (TypeError, ValueError, NameError):
-                self.f.center("Pause must be a float or int. Try again.")
+                self.f.center(f"* {type_msg}. Try again. *", ["RED"])
 
-        # Update pause setting
-        self.f.center(f"Updating pause to {new_pause:.2f}s...", end="\n\n")
-        self.pause = new_pause
+        # Update setting
+        self.f.center(f"Updating {desc} to {user_input}...", end="\n\n")
+        setattr(self, name, user_input)
 
     @space
     def print_new_session_header(self) -> None:
