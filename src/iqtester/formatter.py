@@ -1,5 +1,11 @@
 from typing import Callable, List, Tuple
 from functools import wraps
+import colorama  # type: ignore
+
+
+# Colorama library is used to convert Mac and Unix ANSI escape characters to
+# the appropriate win32 calls to modify standard output
+colorama.init()
 
 
 def space(func: Callable) -> Callable:

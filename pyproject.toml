@@ -22,10 +22,12 @@ classifiers = [
 ]
 readme = "README.md"
 requires-python = ">=3.7"
+dependencies = ['colorama']
 keywords = ["iq tester", "game", "classic game"]
 
 [project.scripts]
 iq-tester = "iqtester.__main__:main"
+
 
 [project.optional-dependencies]
 dev = ["pytest", "flake8"]
