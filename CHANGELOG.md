@@ -1,11 +1,10 @@
 # Changelog
 
-<!-- For Next Release -->
-## v0.2.1 (TBD)
+## v0.2.1 (10/16/2022)
 
-### Feature
+### Fix
 
-- TBD
+- On Windows, the formatting of `iqtester` on the command line has been fixed so that it now looks just as good as on Mac / Unix
 
 ## v0.2.0 (10/14/2022)
 

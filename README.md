@@ -24,16 +24,13 @@ Python 3.7+
 ## Mac / Linux
 ```
 pip install iqtester
+python3 -m iqtester
 ```
 
 ## Windows
 ```
-py -m pip install iqtester
-```
-
-## Start Playing
-```
-python3 -m iqtester
+pip install iqtester
+python -m iqtester
 ```
 
 # Demos
