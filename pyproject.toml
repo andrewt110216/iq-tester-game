@@ -28,9 +28,8 @@ keywords = ["iq tester", "game", "classic game"]
 [project.scripts]
 iq-tester = "iqtester.__main__:main"
 
-
 [project.optional-dependencies]
-dev = ["pytest", "flake8"]
+dev = ["pytest", "flake8", "mypy"]
 
 [project.urls]
 Homepage = "https://github.com/andrewt110216/iq-tester-game"
