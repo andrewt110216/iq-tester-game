@@ -51,3 +51,13 @@ jobs:
         run: mypy src/iqtester tests
       - name: Run Tests
         run: pytest -v
+
+      # Launch game and screenshot main menu
+      - name: Install iqtester in editable mode
+        run: python -m pip install -e .
+      - name: Launch Game
+        run: python -m iqtester
+      - name: Take Screenshot
+        uses: OrbitalOwen/desktop-screenshot-action@0.1
+        with:
+          file-name: 'desktop.jpg'
