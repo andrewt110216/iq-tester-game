@@ -56,9 +56,7 @@ jobs:
       - name: Install iqtester in editable mode
         run: python -m pip install -e .
       - name: Launch Game & Quit
-        # Use here string (<<<) to pass quit option (q) to iqtester program
-        run: python -m iqtester <<< 'q\n'
-      - name: Take Screenshot
-        uses: OrbitalOwen/desktop-screenshot-action@0.1
-        with:
-          file-name: 'desktop.jpg'
+  
+        # Pass quit option ('q') as input to iqtester program using echo and |
+        # which works on both Windows and Mac
+        run: echo 'q\n' | python -m iqtester
