@@ -20,7 +20,6 @@ def test_session_init():
     assert s.played == 0
     assert s.total_score == 0
     assert s.board_size == 5
-    assert s.keep_playing
     assert s.game is None
 
 

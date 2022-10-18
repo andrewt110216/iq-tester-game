@@ -1,18 +1,13 @@
-from typing import Any, Generator, List, Optional, Sequence, Set, Tuple
+from typing import Generator, List, Optional, Sequence, Tuple
 import time
 from .formatter import Formatter, space
 from .game import Game
 
 
-# === Type Aliases & Explanations ===
-Range = Tuple[int, int, int]  # start, stop, step
-Frange = Tuple[float, float, float]  # start, stop, step
-
-
 class Session:
     """Manager of a session of play for the game IQ Tester"""
 
-    def __init__(self, width: int = 78) -> None:
+    def __init__(self, width: int = 78, msg_pause: float = 0.75) -> None:
 
         # Initialize the attribute to store instances of Game
         self.game: Optional[Game] = None
@@ -28,9 +23,10 @@ class Session:
         self.menu_side_border = '|'
         self.menu_top_border = '-'
         self.game_over_pause = 1.25
-        self.msg_pause = 0.75
+        self.msg_pause = msg_pause
 
-        # To make a setting customizable, add it to settings menu map
+        # To make a setting customizable, add it to settings menu map and add
+        # it to the settings_test_args_map in test_session_settings.py
         # key: user input to select on settings menu
         # value: (attribute name, description, type, lower bound, upper bound)
         colors = {"BLUE", "RED", "GREEN", "BLACK", "GRAY"}  # See formatter.py
@@ -231,8 +227,8 @@ class Session:
         self,
         name: str,
         desc: str,
-        type: Any,
-        options: Range | Frange | Set,
+        type: type,
+        options,    # See below for typing options
     ) -> None:
         """
         Prompt user to update a setting, validate input, and make update
@@ -243,40 +239,39 @@ class Session:
             Name of attribute for the setting (e.g. 'board_size')
         desc : str
             Description of setting (e.g. 'Board Size')
-        type : Any
+        type : type
             Type of value for setting (e.g. int)
-        options: Range | Frange | Set
+        options: Tuple[int] | Tuple[float] | Set[str]
             Defines the allowable values for setting
             Range or Frange defines (start, stop, step) of allowable numbers
             Set provides all allowable values
         """
 
-        # Assemble output strings
-
         # Options is a tuple defining a range
-        if isinstance(options, Tuple):
+        was_tuple = False
+        if isinstance(options, tuple):
+            was_tuple = True
             start, stop, step = options
-            prompt = f"Enter desired {desc} between {start} and {stop - step}:"
-            range_msg = f"{desc} must be between {start} and {stop - step}"
-
-            # Create range or frange from options
-            if isinstance(start, int):
-                options = range(start, stop, step)
-            elif isinstance(start, float):
-                options = frange(start, stop, step)
-            else:
-                err_msg = f"Options must be int or float not {type(start)}"
-                raise TypeError(err_msg)
+            last = stop - step
+            prompt = f"Enter desired {desc} between {start} and {last}:"
+            range_msg = f"{desc} must be between {start} and {last}"
 
         # Options is a set of the possible values
         elif isinstance(options, set):
-            prompt = f"Choose desired {desc} from {options}:"
+            prompt = f"Enter desired {desc} from {options}:"
             range_msg = f"{desc} must be in {options}"
 
         type_msg = f"{desc} must of {str(type)}"
 
         # Infinite loop to re-prompt until input is valid
         while True:
+
+            # Options was a tuple: create fresh range or frange each loop
+            if was_tuple and isinstance(start, int):
+                options = range(start, stop, step)
+            elif was_tuple and isinstance(start, float):
+                options = frange(start, stop, step)
+
             user_input = self.f.prompt(prompt)
 
             # Validate input
@@ -338,6 +333,7 @@ def max_element_lens(sequences: Sequence[Sequence[str]]) -> List[int]:
 
     return out
 
+
 def frange(start: float, stop: float = None, step: float = 1.0) -> Generator:
     """Generator like built-in range but allowing for floating point values"""
 
@@ -353,5 +349,5 @@ def frange(start: float, stop: float = None, step: float = 1.0) -> Generator:
             break
         elif step < 0 and temp <= stop:
             break
-        yield round(temp, 1)
+        yield round(temp, 2)
         count += 1
