@@ -1,30 +1,54 @@
-from typing import Any, Optional
-from numbers import Number
+from typing import Any, Generator, List, Optional, Sequence, Set, Tuple
 import time
 from .formatter import Formatter, space
 from .game import Game
 
 
+# === Type Aliases & Explanations ===
+Range = Tuple[int, int, int]  # start, stop, step
+Frange = Tuple[float, float, float]  # start, stop, step
+
+
 class Session:
-    """API for a session of gameplay of IQ Tester"""
+    """Manager of a session of play for the game IQ Tester"""
 
-    def __init__(self) -> None:
+    def __init__(self, width: int = 78) -> None:
 
-        # Create a Formatter object to manage formats of statements to stdout
-        self.f = Formatter(78)
+        # Initialize the attribute to store instances of Game
+        self.game: Optional[Game] = None
 
         # Initialize session statistics
         self.played = 0
         self.total_score = 0
-        self.board_size = 5
 
         # Initialize session settings
-        self.keep_playing = True
-        self.pause = 1.25
+        self.board_size = 5
+        self.prompt_color = "BLUE"
+        self.menu_width = 40
+        self.menu_side_border = '|'
+        self.menu_top_border = '-'
+        self.game_over_pause = 1.25
         self.msg_pause = 0.75
 
-        # Initialize the attribute to store instances of Game
-        self.game: Optional[Game] = None
+        # To make a setting customizable, add it to settings menu map
+        # key: user input to select on settings menu
+        # value: (attribute name, description, type, lower bound, upper bound)
+        colors = {"BLUE", "RED", "GREEN", "BLACK", "GRAY"}  # See formatter.py
+        times = (0.0, 3.01, 0.01)
+        chars = {'|', '*', '-', '.', '~', 'x'}
+        self.settings_menu_map = {
+            "b": ('board_size', 'Board Size', int, (4, 7, 1)),
+            "c": ('prompt_color', 'Prompt Color', str, colors),
+            "p": ('game_over_pause', 'Game Over Pause Time', float, times),
+            "m": ('msg_pause', 'Message Pause Time', float, times),
+            "s": ('menu_side_border', 'Menu Side Borders', str, chars),
+            "t": ('menu_top_border', 'Menu Top/Bottom Borders', str, chars),
+            "w": ('menu_width', 'Menu Width', int, (40, 79, 1)),
+        }
+
+        # Create a Formatter object to manage formats of statements to stdout
+        self.f_width = width
+        self.f = Formatter(self.f_width, self.prompt_color)
 
     def get_average(self) -> float:
         """Return the average points per game for this session"""
@@ -35,24 +59,21 @@ class Session:
     def start(self) -> None:
         """Initiate and manage a new session of games"""
 
-        # Display package header and playing instructions
         self.print_new_session_header()
-        self.print_instructions()
 
-        # Keep playing until user elects to quit
-        while self.keep_playing:
+        # Infinite loop to keep playing until user quits
+        selection_prompt = "Select a menu option"
+        while True:
 
-            # Display main menu and prompt user to make a selection
             self.main_menu()
-            main_choice = self.menu_selection()
+            main_choice = self.f.prompt(selection_prompt).lower()
 
             # Handle selection to start new game
             if main_choice == "":
-
-                # Instantiate a new Game instance
-                self.game = Game(self.f, self.board_size, self.pause)
-
-                # Launch game play and get back the number of points earned
+                self.game = Game(
+                    self.f, self.board_size, self.game_over_pause,
+                    self.msg_pause
+                )
                 game_score = self.game.play()
 
                 # Handle user selection to quit mid-game
@@ -63,116 +84,158 @@ class Session:
                 self.total_score += game_score
                 self.played += 1
 
-            # Handle selection to navigate to settings menu
+            # Handle selection to go to settings menu
             elif main_choice == "s":
 
-                # Display settings menu and prompt user to make a selection
-                self.settings_menu()
-                setting_choice = self.menu_selection()
+                # Ininite loop on settings menu until user returns to main menu
+                while True:
+                    self.settings_menu()
+                    setting = self.f.prompt(selection_prompt).lower()
 
-                # Handle selection to update board size
-                if setting_choice == "s":
-                    self.update_setting('board_size', 'Board Size', int, 4, 6)
-                    time.sleep(self.msg_pause)
+                    # Handle valid menu selection
+                    if setting in self.settings_menu_map:
+                        self.update_setting(*self.settings_menu_map[setting])
 
-                # Handle selection to change pause time
-                elif setting_choice == "p":
-                    self.update_setting('pause', 'Pause', float, 0, 3)
-                    time.sleep(self.msg_pause)
+                        # Create new Formatter object in case settings changed
+                        self.f = Formatter(self.f_width, self.prompt_color)
 
-                # Pause then return to main menu
-                self.f.center("Returning to Main Menu...")
-                time.sleep(self.msg_pause)
+                    # Handle return to main menu
+                    else:
+                        self.f.center("Returning to Main Menu...")
+                        time.sleep(self.msg_pause)
+                        break
 
-            # Handle any other selection, treating as a choice to quit
+            # Treat any other input as choice to quit
             else:
-                self.quit()
+                break
+
+        # Handle quit
+        self.f.center("Thanks for playing!", ['BOLD'])
+        self.print_footer()
 
     @space
     def main_menu(self) -> None:
         """Display the main menu including statistics and gameplay options"""
 
-        # Set width of menu
-        width = 40
+        width = self.menu_width
+        border = self.menu_side_border
 
-        # Top of Menu box and header
-        self.f.center("", [], '-', width - 2)
-        self.f.center("", [], " ", width, '|')
-        self.f.center("MAIN MENU", ['BOLD'], " ", width, '|')
-        self.f.center("", [], " ", width, '|')
+        self.print_menu_top("MAIN MENU", width, border)
 
-        # Game Statistics
-        # Format total and average scores for display
-        score_str = f"{self.total_score:,}"
-        average = self.get_average()
-        if average % 1 == 0:
-            average = int(average)
-        avg_str = f"{average:,}"
+        # Game statistics rows
+        stats = [
+            ("GAMES PLAYED: ", str(self.played)),
+            ("YOUR TOTAL SCORE: ", f"{self.total_score:,}"),
+            ("AVERAGE SCORE: ", f"{self.get_average():,}"),
+        ]
 
-        # Assemble strings for each statistic, aligned left and right
-        l, r = 18, max(6, len(score_str), len(avg_str)) + 1
-        games_played = "GAMES PLAYED: ".ljust(l) + str(self.played).rjust(r)
-        total_score = "YOUR TOTAL SCORE: ".ljust(l) + score_str.rjust(r)
-        average_score = "AVERAGE SCORE: ".ljust(l) + avg_str.rjust(r)
+        # Menu options
+        opts = [
+            ("New Game", "[ENTER]"),
+            ("Settings Menu", "[s]"),
+            ("Quit", "[q]"),
+        ]
 
-        # Display each menu row with formatting
+        # Find maximum label length and value length between both blocks
+        lens_stats = max_element_lens(stats)
+        lens_options = max_element_lens(opts)
+        left, right = [max(x) for x in zip(lens_stats, lens_options)]
+        left += 2
+
+        # Print each block
         formats = ['BOLD', 'GREEN']
-        self.f.center(games_played, formats, " ", width, '|')
-        self.f.center(total_score, formats, " ", width, '|')
-        self.f.center(average_score, formats, " ", width, '|')
-        self.f.center("", [], " ", width, '|')
-
-        # Gameplay options
+        self.print_menu_block(stats, formats, width, left, right, border)
+        self.print_menu_space(width, border)
         formats = ['BOLD', 'RED']
-        new_game_row = "New Game".ljust(l, '.') + "[ENTER]".rjust(r, '.')
-        settings_row = "Settings".ljust(l, '.') + "[s]".rjust(r, '.')
-        quit_row = "Quit".ljust(l, '.') + "[q]".rjust(r, '.')
-        self.f.center(new_game_row, formats, " ", width, '|')
-        self.f.center(settings_row, formats, " ", width, '|')
-        self.f.center(quit_row, formats, " ", width, '|')
+        self.print_menu_block(opts, formats, width, left, right, border, '.')
 
-        # Bottom of Menu box
-        self.f.center("", [], " ", width, '|')
-        self.f.center("", [], '-', width - 2)
+        self.print_menu_bottom(width, border)
 
     @space
     def settings_menu(self) -> None:
         """Display settings menu and allow user to change settings"""
 
-        # menu width
-        width = 40
-        l, r = 18, 4
+        width = self.menu_width
+        border = self.menu_side_border
 
-        # Top of Menu box and header
-        self.f.center("", [], '-', width - 2)
-        self.f.center("", [], " ", width, '|')
-        self.f.center("SETTINGS MENU", ['BOLD'], " ", width, '|')
-        self.f.center("", [], " ", width, '|')
+        self.print_menu_top("SETTINGS MENU", width, border)
 
-        # Menu options
-        s = self.board_size
-        size_row = f"Board Size ({s})".ljust(l, '.') + "[s]".rjust(r, '.')
-        p = self.pause
-        pause_row = f"Pause Time ({p})".ljust(l, '.') + "[p]".rjust(r, '.')
-        return_row = "Return".ljust(l, '.') + "[r]".rjust(r, '.')
-        self.f.center(size_row, [], " ", width, '|')
-        self.f.center(pause_row, [], " ", width, '|')
-        self.f.center(return_row, [], " ", width, '|')
+        # Generate row labels & values from settings menu map
+        opts = []
+        for key, args in self.settings_menu_map.items():
+            # [Setting Label] ([Current Value])
+            label = f"{args[1]} ({getattr(self, args[0])})"
+            value = f"[{key}]"
+            opts.append((label, value))
 
-        # Bottom of Menu box
-        self.f.center("", [], " ", width, '|')
-        self.f.center("", [], '-', width - 2)
+        opts.append(("Return to Main Menu", "[r]"))
+
+        left, right = max_element_lens(opts)
+        left += 2
+
+        formats = ['BOLD', 'RED']
+        self.print_menu_block(opts, formats, width, left, right, border, '.')
+
+        self.print_menu_bottom(width, border)
+
+    def print_menu_top(self, header: str, width: int, border: str) -> None:
+        """Print the top of a menu including its header with a border"""
+        self.f.center("", [], self.menu_top_border, width - 2)
+        self.print_menu_space(width, border)
+        self.f.center(f"{header}", ['BOLD'], " ", width, border)
+        self.print_menu_space(width, border)
+
+    def print_menu_bottom(self, width: int, border: str) -> None:
+        """Print the top of a menu including its header with a border"""
+        self.print_menu_space(width, border)
+        self.f.center("", [], self.menu_top_border, width - 2)
+
+    def print_menu_space(self, width: int, border: str) -> None:
+        """Print a blank row of a menu box"""
+        self.f.center("", inner_width=width, inner_border_char=border)
+
+    def print_menu_block(
+        self,
+        rows_label_value: List[Tuple[str, str]],
+        formats: List[str],
+        width: int,
+        left_just: int,
+        right_just: int,
+        border: str,
+        fill_char: str = " ",
+    ) -> None:
+        """
+        Print a block of menu options of a menu box with proper alignment
+
+        Parameters
+        ----------
+        rows_label_value : List[Tuple[str, str]]
+            Strings to be printed on the left and right side of each row
+        formats : List[str]
+            Format codes to be applied (see Formatter class for options)
+        width : int
+            Width of menu box
+        border : str
+            Border character for left and right sides of menu
+        fill_char : str
+            Fill character printed between right and left sides of row
+        """
+
+        # Print each row with formatting and proper alignment
+        for label, value in rows_label_value:
+            display = f"{label:{fill_char}<{left_just}}"
+            display += f"{value:{fill_char}>{right_just}}"
+            self.f.center(display, formats, " ", width, border)
 
     def update_setting(
         self,
         name: str,
         desc: str,
         type: Any,
-        lower: Number,
-        upper: Number
+        options: Range | Frange | Set,
     ) -> None:
         """
-        Prompt user to update a setting
+        Prompt user to update a setting, validate input, and make update
 
         Parameters
         ----------
@@ -182,16 +245,35 @@ class Session:
             Description of setting (e.g. 'Board Size')
         type : Any
             Type of value for setting (e.g. int)
-        lower : Number
-            Lower bound allowed as value for setting
-        upper : Number
-            Upper bound allowed as value for setting
+        options: Range | Frange | Set
+            Defines the allowable values for setting
+            Range or Frange defines (start, stop, step) of allowable numbers
+            Set provides all allowable values
         """
 
         # Assemble output strings
-        prompt = f"Enter desired {desc} between {lower} and {upper}:"
-        range_msg = f"{desc} must be between {lower} and {upper}"
-        type_msg = f"{desc} must of: {str(type)}"
+
+        # Options is a tuple defining a range
+        if isinstance(options, Tuple):
+            start, stop, step = options
+            prompt = f"Enter desired {desc} between {start} and {stop - step}:"
+            range_msg = f"{desc} must be between {start} and {stop - step}"
+
+            # Create range or frange from options
+            if isinstance(start, int):
+                options = range(start, stop, step)
+            elif isinstance(start, float):
+                options = frange(start, stop, step)
+            else:
+                err_msg = f"Options must be int or float not {type(start)}"
+                raise TypeError(err_msg)
+
+        # Options is a set of the possible values
+        elif isinstance(options, set):
+            prompt = f"Choose desired {desc} from {options}:"
+            range_msg = f"{desc} must be in {options}"
+
+        type_msg = f"{desc} must of {str(type)}"
 
         # Infinite loop to re-prompt until input is valid
         while True:
@@ -200,7 +282,7 @@ class Session:
             # Validate input
             try:
                 user_input = type(user_input)
-                if lower <= user_input <= upper:
+                if user_input in options:
                     break
                 self.f.center(f"* {range_msg}. Try again. *", ["RED"])
 
@@ -211,34 +293,65 @@ class Session:
         # Update setting
         self.f.center(f"Updating {desc} to {user_input}...", end="\n\n")
         setattr(self, name, user_input)
+        time.sleep(self.msg_pause)
 
     @space
     def print_new_session_header(self) -> None:
-        """Print header rows for a new session"""
+        """Print header and instructions for a new session"""
         self.f.center('', ["BOLD", "BLUE"], '*')
         self.f.center(' WELCOME TO IQ TESTER ', ["BOLD"], '*')
-        self.f.center('', ["BOLD", "BLUE"], '*')
-
-    def print_instructions(self) -> None:
-        """Print instructions for the game"""
+        self.f.center('', ["BOLD", "BLUE"], '*', end="\n\n")
         self.f.center("Start with any one hole empty.")
         self.f.center("As you jump the pegs remove them from the board.")
         self.f.center("Try to leave only one peg. See how you rate!")
 
     @space
-    def footer(self) -> None:
+    def print_footer(self) -> None:
         """Print footer rows for a session"""
         self.f.center("For even more fun compete with someone. Lots of luck!")
         self.f.center("Copyright (C) 1975 Venture MFG. Co., INC. U.S.A.")
         self.f.center("Python package `iqtester` by Andrew Tracey, 2022.")
         self.f.center("Follow me: https://www.github.com/andrewt110216")
 
-    def menu_selection(self) -> str:
-        """Prompt user to select menu option and return lowercased choice"""
-        return self.f.prompt("Select a menu option").lower()
 
-    def quit(self) -> None:
-        """Handle user selection to quit playing"""
-        self.f.center("Thanks for playing!", ['BOLD'])
-        self.footer()
-        self.keep_playing = False
+def max_element_lens(sequences: Sequence[Sequence[str]]) -> List[int]:
+    """
+    For a sequence of sequences of strings, return the lengths of the
+    longest strings at each position in the inner sequences
+
+    Example
+    -------
+    >>> sequences = [('Apple', '1,345'), ('Watermelon', '512'), ('a', '1')]
+    >>> print(max_lens(sequences))
+    [10, 5]
+    """
+
+    out = []
+
+    for elements in zip(*sequences):
+
+        # Find element in elements with max length
+        longest = max(elements, key=lambda x: len(x))
+
+        # Append its length to out
+        out.append(len(longest))
+
+    return out
+
+def frange(start: float, stop: float = None, step: float = 1.0) -> Generator:
+    """Generator like built-in range but allowing for floating point values"""
+
+    # If stop is not defined, assume start is 0 and stop is start
+    if stop is None:
+        stop = start
+        start = 0.0
+
+    count = 0
+    while True:
+        temp = float(start + count * step)
+        if step > 0 and temp >= stop:
+            break
+        elif step < 0 and temp <= stop:
+            break
+        yield round(temp, 1)
+        count += 1

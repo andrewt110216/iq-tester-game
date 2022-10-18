@@ -11,7 +11,7 @@ class Game:
         self,
         f: Formatter,
         size: int = 5,
-        pause: float = 2,
+        game_over_pause: float = 2,
         msg_pause: float = 0.75
     ) -> None:
 
@@ -19,7 +19,7 @@ class Game:
         self.f = f
 
         # Setting for length (in seconds) of pause after game over
-        self.pause = pause
+        self.game_over_pause = game_over_pause
 
         # Setting for length (in seconds) of pause when certain messages are
         # displayed, like invalid selection or updated settings
@@ -360,5 +360,5 @@ class Game:
         print(("*" * self.f.width))
 
         # Pause before returning number of points earned this game
-        time.sleep(self.pause)
+        time.sleep(self.game_over_pause)
         return points

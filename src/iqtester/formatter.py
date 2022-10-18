@@ -33,14 +33,19 @@ class Formatter:
         "BLUE": ("\033[94m", 5),
         "GREEN": ("\033[92m", 5),
         "RED": ("\033[91m", 5),
+        "BLACK": ("\033[0;30m", 6),
+        "GRAY": ("\033[0;37m", 6),
         "BOLD": ("\033[1m", 4),
         "END": ("\033[0m", 4),
     }
 
-    def __init__(self, width: int = 78) -> None:
+    def __init__(self, width: int = 78, prompt_color: str = "BLUE") -> None:
 
         # The max width for all lines printed
         self.width = width
+
+        # The text color for the prompt method
+        self.prompt_color = prompt_color
 
     def center(
         self,
@@ -150,11 +155,14 @@ class Formatter:
         return msg, format_char_count
 
     @space
-    def prompt(self, msg: str) -> str:
+    def prompt(self, msg: str, color: str = None) -> str:
         """Return user-input with center-aligned user-prompt"""
 
+        if not color:
+            color = self.prompt_color
+
         # Print message with formatting and no new line character
-        self.center(f">> {msg} >>", ["BLUE"], " ", 0, "", -1, "")
+        self.center(f">> {msg} >>", [color], " ", 0, "", -1, "")
 
         # Request input with cursor immediately following printed message
         return input(" ")
