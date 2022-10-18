@@ -52,11 +52,12 @@ jobs:
       - name: Run Tests
         run: pytest -v
 
-      # Launch game and screenshot main menu
+      # Launch iqtester in order to view output in GH Action
       - name: Install iqtester in editable mode
         run: python -m pip install -e .
-      - name: Launch Game
-        run: python -m iqtester
+      - name: Launch Game & Quit
+        # Use here string (<<<) to pass quit option (q) to iqtester program
+        run: python -m iqtester <<< 'q\n'
       - name: Take Screenshot
         uses: OrbitalOwen/desktop-screenshot-action@0.1
         with:
